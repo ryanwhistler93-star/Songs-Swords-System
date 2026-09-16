@@ -1,3 +1,5 @@
+Manifest URL: https://raw.githubusercontent.com/ryanwhistler93-star/Songs-Swords-System/main/system.json
+
 # D100 System
 
 This is a starter custom system for Foundry VTT v14 built around d100 skill resolution.
