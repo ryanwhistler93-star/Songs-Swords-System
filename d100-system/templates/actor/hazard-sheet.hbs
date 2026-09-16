@@ -1,0 +1,121 @@
+<form class="d100-system actor-sheet hazard-sheet {{#unless isEditMode}}read-mode{{/unless}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" />
+    <div class="header-fields">
+      <input class="hazard-name-input" name="name" type="text" value="{{actor.name}}" placeholder="Name" {{#unless isEditMode}}disabled{{/unless}} />
+      <label class="edit-toggle">
+        <input type="checkbox" data-edit-toggle {{#if isEditMode}}checked{{/if}} /> Edit Mode
+      </label>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="vital-grid">
+      <div class="resource-box compact-resource-box hazard-size-box">
+        <div class="resource-header">
+          <label>Size (Squares)</label>
+        </div>
+        <div class="resource-adjuster">
+          <input name="system.size" type="number" value="{{system.size}}" min="0" step="1" {{#unless isEditMode}}disabled{{/unless}} />
+        </div>
+      </div>
+
+      <div class="resource-box compact-resource-box">
+        <div class="resource-header">
+          <label>Health</label>
+          <span>{{healthValue}} / {{healthMax}}</span>
+        </div>
+        <div class="resource-bar" aria-label="Health">
+          <span style="width: {{healthPercent}}%"></span>
+        </div>
+        <div class="resource-adjuster">
+          {{#if isEditMode}}
+            <label>Base</label>
+            <input class="vital-field" data-vital-path="system.health.max" type="number" value="{{system.health.max}}" min="0" />
+          {{/if}}
+          <label>Current</label>
+          <input class="vital-field" data-vital-path="system.health.value" type="number" value="{{healthValue}}" min="0" />
+          <label>Modifier</label>
+          <input class="vital-field" data-vital-path="system.health.modifier" type="number" value="{{system.health.modifier}}" />
+        </div>
+      </div>
+
+      <div class="resource-box compact-resource-box hazard-degree-box">
+        <div class="resource-header">
+          <label>Degree of Success</label>
+          <span>{{degreeValue}} / {{degreeMax}}</span>
+        </div>
+        <div class="resource-bar resource-bar-degree" aria-label="Degree of Success">
+          <span style="width: {{degreePercent}}%"></span>
+        </div>
+        <div class="resource-adjuster">
+          <button type="button" class="hazard-degree-adjust" data-direction="-1" aria-label="Decrease Degree of Success">-</button>
+          <span class="hazard-degree-value">{{degreeValue}}</span>
+          <button type="button" class="hazard-degree-adjust" data-direction="1" aria-label="Increase Degree of Success">+</button>
+          {{#if isEditMode}}
+            <label>Max</label>
+            <input class="vital-field" data-vital-path="system.degreeOfSuccess.max" type="number" value="{{degreeMax}}" min="0" />
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-block hazard-description-block">
+      <h3>Description</h3>
+      <textarea name="system.description" {{#unless isEditMode}}disabled{{/unless}}>{{system.description}}</textarea>
+    </div>
+
+    <div class="stat-block hazard-actions-block">
+      <h3>Actions</h3>
+      {{#if hazardActions.length}}
+        <div class="npc-action-table">
+          <div class="npc-action-table-header">
+            <span>Name</span><span>Range</span><span>Trigger</span><span>Dice</span><span>Damage / Healing</span><span>Recharge</span><span></span>
+          </div>
+          {{#each hazardActions as |action|}}
+            <div class="npc-action-row" data-item-id="{{action.id}}" title="Click to open item sheet">
+              <button type="button" class="hazard-action-use" data-item-id="{{action.id}}" {{#unless action.usable}}disabled{{/unless}}>{{action.name}}</button>
+              <span>{{action.range}}</span>
+              <span>{{action.trigger}}</span>
+              <span>{{action.dice}}</span>
+              <span>{{action.effectLabel}}</span>
+              <span>
+                {{#if action.hasRecharge}}
+                  <span class="npc-action-recharge-label">{{action.rechargeProgress}} / {{action.recharge}}</span>
+                  <span class="npc-action-recharge-bar"><span style="width: {{action.rechargePercent}}%"></span></span>
+                {{/if}}
+              </span>
+              {{#if @root.isEditMode}}
+                <button type="button" class="hazard-action-remove" data-item-id="{{action.id}}" title="Remove Action" aria-label="Remove {{action.name}}"><i class="fas fa-times"></i></button>
+              {{else}}
+                <span></span>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+      {{else}}
+        <p>No Actions. Drag an NPC Action item onto this sheet to add one — click its name to roll damage and send its description to chat, with no Skill Check.</p>
+      {{/if}}
+    </div>
+
+    <details class="stat-block hazard-resistance-block" {{#if resistanceOpen}}open{{/if}}>
+      <summary><h3>Resistances</h3></summary>
+      <table class="resistance-table">
+        <thead>
+          <tr>
+            <th>Damage Type</th>
+            <th>Resistance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each resistanceRows as |row|}}
+            <tr class="resistance-row">
+              <td><span class="resistance-label">{{row.label}}</span></td>
+              <td><input class="resistance-modifier-input" name="system.resistance.{{row.type}}" type="number" value="{{row.value}}" {{#unless @root.isEditMode}}disabled{{/unless}} /></td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </details>
+  </section>
+</form>

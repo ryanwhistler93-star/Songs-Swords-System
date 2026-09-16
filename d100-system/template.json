@@ -1,0 +1,599 @@
+{
+  "Actor": {
+    "types": [
+      "character",
+      "npc",
+      "hazard"
+    ],
+    "templates": {
+      "base": {
+        "biography": "",
+        "notes": "",
+        "fieldsOfStudy": {
+          "1": { "name": "", "trained": false },
+          "2": { "name": "", "trained": false },
+          "3": { "name": "", "trained": false },
+          "4": { "name": "", "trained": false },
+          "5": { "name": "", "trained": false },
+          "6": { "name": "", "trained": false },
+          "7": { "name": "", "trained": false },
+          "8": { "name": "", "trained": false },
+          "9": { "name": "", "trained": false }
+        },
+        "profession": "",
+        "race": "",
+        "raceFeatureUsage": {
+          "1": 0,
+          "5": 0,
+          "10": 0,
+          "15": 0
+        },
+        "resource": {
+          "type": "adrenaline",
+          "value": 0,
+          "modifier": 0
+        },
+        "scars": 0,
+        "resistance": {},
+        "resistanceMod": {},
+        "healing": [],
+        "activeWeaponTechnique": {
+          "itemId": "",
+          "stage": 1,
+          "chosenOptions": {}
+        },
+        "languagesKnown": {
+          "common": false,
+          "avian": false,
+          "draconic": false,
+          "dwarvish": false,
+          "elvish": false,
+          "felidari": false,
+          "giant": false,
+          "gnome": false,
+          "orc": false,
+          "tortun": false,
+          "celestial": false,
+          "druidic": false,
+          "nyxian": false,
+          "voidsong": false,
+          "glacior": false,
+          "muhdra": false,
+          "vulkaric": false,
+          "stratu": false,
+          "primordial": false,
+          "faelori": false
+        },
+        "defense": 0,
+        "defenseModifier": 0,
+        "movement": 0,
+        "movementModifier": 0,
+        "attributes": {
+          "strength": 1,
+          "toughness": 1,
+          "observation": 1,
+          "reflex": 1,
+          "majesty": 1
+        },
+        "skills": {
+          "acrobatics": 0,
+          "alchemy": 0,
+          "athletics": 0,
+          "crafting": 0,
+          "investigation": 0,
+          "knowledge": 0,
+          "languages": 0,
+          "luck": 0,
+          "magecraft": 0,
+          "medicine": 0,
+          "performance": 0,
+          "sleight_of_hand": 0,
+          "speechcraft": 0,
+          "stealth": 0,
+          "survival": 0,
+          "vehicles": 0,
+          "heavy_weapons": 0,
+          "light_weapons": 0,
+          "magic_weapons": 0,
+          "ranged_weapons": 0,
+          "special_weapons": 0,
+          "armor": 0,
+          "evasion": 0,
+          "shields": 0,
+          "cosmic_magic": 0,
+          "druidic_magic": 0,
+          "elemental_magic": 0,
+          "light_magic": 0,
+          "shadow_magic": 0
+        }
+      }
+    },
+    "character": {
+      "templates": [
+        "base"
+      ],
+      "name": "",
+      "level": 1,
+      "baseHealth": 0,
+      "experience": 0,
+      "health": {
+        "value": 0,
+        "max": 0,
+        "modifier": 0
+      }
+    },
+    "npc": {
+      "templates": [
+        "base"
+      ],
+      "category": "",
+      "categoryTraitChoices": {},
+      "role": "minion",
+      "traits": "",
+      "level": 1,
+      "monstrous": false,
+      "auraActions": false,
+      "auraActionCount": 1,
+      "traitPointModifier": 0,
+      "turnsPerRound": 1,
+      "health": {
+        "value": 0,
+        "max": 0,
+        "modifier": 0
+      }
+    },
+    "hazard": {
+      "description": "",
+      "size": 1,
+      "degreeOfSuccess": {
+        "value": 0,
+        "max": 0
+      },
+      "health": {
+        "value": 0,
+        "max": 0,
+        "modifier": 0
+      },
+      "resistance": {},
+      "resistanceMod": {}
+    }
+  },
+  "Item": {
+    "types": [
+      "gear",
+      "weapon",
+      "armor",
+      "talent",
+      "profession",
+      "race",
+      "spell",
+      "trait",
+      "npcAction",
+      "category",
+      "weaponTechnique"
+    ],
+    "templates": {
+      "base": {
+        "description": "",
+        "cost": 0,
+        "quantity": 1,
+        "areaOfEffect": false,
+        "areaColor": "#6366f1",
+        "areaSize": 1,
+        "areaShape": "rect",
+        "areaRayLength": 1,
+        "areaRayWidth": 1
+      }
+    },
+    "gear": {
+      "templates": [
+        "base"
+      ],
+      "type": "gear",
+      "category": "misc",
+      "actionType": "major",
+      "ammunition": false,
+      "gold": 0,
+      "silver": 0,
+      "copper": 0,
+      "tier": 0,
+      "breakPoints": 0,
+      "defense": 0,
+      "damage": 0,
+      "damageDice": "1d6",
+      "damageType": "slashing",
+      "damageBonuses": {
+        "bludgeoning": 0,
+        "piercing": 0,
+        "slashing": 0,
+        "acid": 0,
+        "cold": 0,
+        "fire": 0,
+        "force": 0,
+        "lightning": 0,
+        "necrotic": 0,
+        "poison": 0,
+        "psychic": 0,
+        "radiant": 0,
+        "thunder": 0
+      },
+      "range": 1,
+      "skill": "light_weapons",
+      "damageHealing": "",
+      "consumableDice": "",
+      "consumableEffect": "damage",
+      "magicItemDice": "",
+      "magicItemEffect": "none",
+      "areaOfEffect": false,
+      "areaColor": "#6366f1",
+      "areaSize": 1,
+      "areaShape": "rect",
+      "areaRayLength": 1,
+      "areaRayWidth": 1,
+      "resourceCost": 0,
+      "empowermentCost": 0,
+      "empowermentDice": "",
+      "equipped": true
+    },
+    "weapon": {
+      "templates": [
+        "base"
+      ],
+      "category": "weapon",
+      "gold": 0,
+      "silver": 0,
+      "copper": 0,
+      "tier": 0,
+      "breakPoints": 0,
+      "damage": 0,
+      "damageDice": "1d6",
+      "damageType": "slashing",
+      "damageBonuses": {
+        "bludgeoning": 0,
+        "piercing": 0,
+        "slashing": 0,
+        "acid": 0,
+        "cold": 0,
+        "fire": 0,
+        "force": 0,
+        "lightning": 0,
+        "necrotic": 0,
+        "poison": 0,
+        "psychic": 0,
+        "radiant": 0,
+        "thunder": 0
+      },
+      "range": 1,
+      "skill": "light_weapons",
+      "equipped": true
+    },
+    "armor": {
+      "templates": [
+        "base"
+      ],
+      "armorType": "armor",
+      "gold": 0,
+      "silver": 0,
+      "copper": 0,
+      "tier": 0,
+      "defense": 0,
+      "breakPoints": 0,
+      "resistances": {},
+      "equipped": true
+    },
+    "talent": {
+      "templates": [
+        "base"
+      ],
+      "skill": "",
+      "talentSlot": 0,
+      "tier": 1,
+      "usesPerDay": 0,
+      "actionType": "major",
+      "description": ""
+    },
+    "spell": {
+      "templates": [
+        "base"
+      ],
+      "description": "",
+      "empowermentDescription": "",
+      "tier": 0,
+      "magicSkill": "",
+      "damageHealing": "",
+      "damageType": "healing",
+      "trackHealing": false,
+      "concentration": false,
+      "resourceCost": 0,
+      "empowermentCost": 0,
+      "empowermentDice": "",
+      "actionType": "major",
+      "range": 0
+    },
+    "profession": {
+      "templates": [
+        "base"
+      ],
+      "resource": "adrenaline",
+      "baseHealth": 0,
+      "skillBonuses": [
+        {
+          "skill": "athletics",
+          "points": 3
+        },
+        {
+          "skill": "armor",
+          "points": 3
+        },
+        {
+          "skill": "light_weapons",
+          "points": 3
+        }
+      ],
+      "optionalSkillBonuses": false,
+      "bonusChoices": [],
+      "level": 1,
+      "attributes": {
+        "strength": 0,
+        "toughness": 0,
+        "observation": 0,
+        "reflex": 0,
+        "majesty": 0
+      },
+      "skills": {
+        "acrobatics": 0,
+        "alchemy": 0,
+        "athletics": 0,
+        "crafting": 0,
+        "investigation": 0,
+        "knowledge": 0,
+        "languages": 0,
+        "luck": 0,
+        "magecraft": 0,
+        "medicine": 0,
+        "performance": 0,
+        "sleight_of_hand": 0,
+        "speechcraft": 0,
+        "stealth": 0,
+        "survival": 0,
+        "vehicles": 0,
+        "heavy_weapons": 0,
+        "light_weapons": 0,
+        "magic_weapons": 0,
+        "ranged_weapons": 0,
+        "special_weapons": 0,
+        "armor": 0,
+        "evasion": 0,
+        "shields": 0,
+        "cosmic_magic": 0,
+        "druidic_magic": 0,
+        "elemental_magic": 0,
+        "light_magic": 0,
+        "shadow_magic": 0
+      },
+      "health": {
+        "value": 0,
+        "max": 0
+      },
+      "skillGrants": {},
+      "skillChoices": {},
+      "skillChoiceCount": 0,
+      "skillChoiceGroups": {},
+      "origin": "",
+      "features": {
+        "1": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "resourceGain": 0,
+          "resourceLoss": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        },
+        "3": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "resourceGain": 0,
+          "resourceLoss": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        },
+        "5": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "resourceGain": 0,
+          "resourceLoss": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        },
+        "7": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "resourceGain": 0,
+          "resourceLoss": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        },
+        "9": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "resourceGain": 0,
+          "resourceLoss": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        }
+      },
+      "characterCreation": true
+    },
+    "race": {
+      "templates": [
+        "base"
+      ],
+      "movement": 0,
+      "languages": {
+        "common": false,
+        "avian": false,
+        "draconic": false,
+        "dwarvish": false,
+        "elvish": false,
+        "felidari": false,
+        "giant": false,
+        "gnome": false,
+        "orc": false,
+        "tortun": false,
+        "celestial": false,
+        "druidic": false,
+        "nyxian": false,
+        "voidsong": false,
+        "glacior": false,
+        "muhdra": false,
+        "vulkaric": false,
+        "stratu": false,
+        "primordial": false,
+        "faelori": false
+      },
+      "languageChoices": 0,
+      "languageChoiceGroups": {},
+      "features": {
+        "1": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "uses": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        },
+        "5": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "uses": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        },
+        "10": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "uses": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        },
+        "15": {
+          "title": "",
+          "text": "",
+          "actionType": "major",
+          "uses": 0,
+          "areaOfEffect": false,
+          "areaColor": "#6366f1",
+          "areaSize": 1,
+          "areaShape": "rect",
+          "areaRayLength": 1,
+          "areaRayWidth": 1
+        }
+      }
+    },
+    "trait": {
+      "templates": [
+        "base"
+      ],
+      "traitPointCost": 0
+    },
+    "npcAction": {
+      "templates": [
+        "base"
+      ],
+      "actionType": "major",
+      "auraAction": false,
+      "range": 0,
+      "dice": "",
+      "effectType": "healing",
+      "recharge": 0,
+      "requiresCheck": false,
+      "isHazardAction": false,
+      "trigger": ""
+    },
+    "category": {
+      "templates": [
+        "base"
+      ],
+      "generalTraits": [],
+      "level5Traits": [],
+      "level9Traits": [],
+      "level13Traits": [],
+      "level17Traits": []
+    },
+    "weaponTechnique": {
+      "templates": [
+        "base"
+      ],
+      "skill": "light_weapons",
+      "resourceCostToBegin": 0,
+      "stages": {
+        "1": {
+          "name": "Stage 1",
+          "resourceCostToAdvance": 0,
+          "options": {
+            "1": { "name": "", "description": "" },
+            "2": { "name": "", "description": "" },
+            "3": { "name": "", "description": "" }
+          }
+        },
+        "2": {
+          "name": "Stage 2",
+          "resourceCostToAdvance": 0,
+          "options": {
+            "1": { "name": "", "description": "" },
+            "2": { "name": "", "description": "" },
+            "3": { "name": "", "description": "" }
+          }
+        },
+        "3": {
+          "name": "Stage 3",
+          "resourceCostToAdvance": 0,
+          "options": {
+            "1": { "name": "", "description": "" },
+            "2": { "name": "", "description": "" },
+            "3": { "name": "", "description": "" }
+          }
+        }
+      }
+    }
+  }
+}
