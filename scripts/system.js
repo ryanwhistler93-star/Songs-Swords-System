@@ -1,9 +1,9 @@
 Hooks.once('init', () => {
-  console.log('D100 System | Initializing custom d100 system...');
+  console.log('Songs & Swords | Initializing custom d100 system...');
 
   const systemData = {
     name: 'd100-system',
-    label: 'D100 System'
+    label: 'Songs & Swords'
   };
 
   game.d100System = systemData;
@@ -1678,7 +1678,7 @@ Hooks.once('init', () => {
       'd100-system': { condition: def.key, stacks: def.stackable ? Math.max(1, Math.floor(stacksToAdd)) : 1 }
     });
 
-    console.debug('D100 System | Applying condition', def.key, {
+    console.debug('Songs & Swords | Applying condition', def.key, {
       registeredInConfig: !!CONFIG.statusEffects.find((entry) => entry.id === def.key),
       effectData
     });
@@ -3377,7 +3377,7 @@ Hooks.once('init', () => {
           if (!executed) ui.notifications.warn(`${item.name} could not be used (it may still be recharging).`);
           this.render();
         } catch (error) {
-          console.error('D100 System | NPC Action roll failed', error);
+          console.error('Songs & Swords | NPC Action roll failed', error);
           ui.notifications.error('Something went wrong rolling that NPC Action. See console (F12) for details.');
         }
       });
@@ -4914,7 +4914,7 @@ Hooks.once('init', () => {
           rolls: [roll]
         });
       } catch (error) {
-        console.error('D100 System | Save roll failed', error);
+        console.error('Songs & Swords | Save roll failed', error);
         ui.notifications.error('Something went wrong rolling that save. See console (F12) for details.');
       }
     }
@@ -4980,7 +4980,7 @@ Hooks.once('init', () => {
           rolls: [roll]
         });
       } catch (error) {
-        console.error('D100 System | Attribute check roll failed', error);
+        console.error('Songs & Swords | Attribute check roll failed', error);
         ui.notifications.error('Something went wrong rolling that check. See console (F12) for details.');
       }
     }
@@ -5563,7 +5563,7 @@ Hooks.once('init', () => {
           if (!executed) ui.notifications.warn(`${item.name} could not be used (it may still be recharging).`);
           this.render();
         } catch (error) {
-          console.error('D100 System | Hazard Action roll failed', error);
+          console.error('Songs & Swords | Hazard Action roll failed', error);
           ui.notifications.error('Something went wrong rolling that Action. See console (F12) for details.');
         }
       });
@@ -5589,19 +5589,19 @@ Hooks.once('init', () => {
   Actors.registerSheet('d100-system', D100ActorSheet, {
     types: ['character', 'npc'],
     makeDefault: true,
-    label: 'D100 Actor Sheet'
+    label: 'Songs & Swords Actor Sheet'
   });
 
   Actors.registerSheet('d100-system', D100HazardSheet, {
     types: ['hazard'],
     makeDefault: true,
-    label: 'D100 Hazard Sheet'
+    label: 'Songs & Swords Hazard Sheet'
   });
 
   Items.registerSheet('d100-system', D100ItemSheet, {
     types: ['gear', 'weapon', 'armor', 'talent', 'profession', 'race', 'spell', 'trait', 'npcAction', 'category', 'weaponTechnique'],
     makeDefault: true,
-    label: 'D100 Item Sheet'
+    label: 'Songs & Swords Item Sheet'
   });
 
   CONFIG.Actor.documentClass = D100Actor;
@@ -5865,7 +5865,7 @@ Hooks.once('init', () => {
         try {
           roll = await new Roll(parseDiceExpression(formula)).evaluate();
         } catch (error) {
-          console.error('D100 System | Inline roll failed', error);
+          console.error('Songs & Swords | Inline roll failed', error);
           ui.notifications.error(`Could not roll "${formula}". See console (F12) for details.`);
           return;
         }
@@ -5917,7 +5917,7 @@ Hooks.once('init', () => {
         try {
           roll = await new Roll(parseDiceExpression(formula)).evaluate();
         } catch (error) {
-          console.error('D100 System | Inline resource roll failed', error);
+          console.error('Songs & Swords | Inline resource roll failed', error);
           ui.notifications.error(`Could not roll "${formula}". See console (F12) for details.`);
           return;
         }
@@ -6047,7 +6047,7 @@ Hooks.once('init', () => {
 });
 
 Hooks.once('ready', () => {
-  console.log('D100 System | Ready.');
+  console.log('Songs & Swords | Ready.');
   game.d100System.renderFateTracker();
   game.d100System.renderTrackersPanel();
 

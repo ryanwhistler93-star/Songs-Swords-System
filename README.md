@@ -1,6 +1,6 @@
-# D100 System
+# Songs & Swords
 
-This is a starter custom system for Foundry VTT v14 built around d100 skill resolution.
+A custom d100 tabletop roleplaying system for Foundry VTT v14.
 
 ## Structure
 
@@ -13,11 +13,11 @@ This is a starter custom system for Foundry VTT v14 built around d100 skill reso
 
 ## Installation
 
-1. Copy this folder into your Foundry `Data/systems/` directory.
-2. Launch Foundry VTT.
-3. Go to the Game Systems tab and enable the D100 System.
-4. Create actors and items using the default templates.
+1. In Foundry VTT, go to **Game Systems → Install System**.
+2. Paste the manifest URL: `https://github.com/ryanwhistler93-star/Songs-Swords-System/releases/latest/download/system.json`
+3. Create a world using **Songs & Swords** and enjoy.
 
 ## Notes
 
-This is intentionally minimal and designed to be expanded with your custom rules, dice logic, and sheet layout.
+Built around Character, NPC, and Hazard/Trap actor sheets, with a growing library of custom mechanics: Conditions, Weapon Techniques, Category traits, shared Trackers, and more.
+
