@@ -1,0 +1,1095 @@
+<form class="d100-system actor-sheet {{#if isNpc}}npc-actor-sheet{{/if}} {{#unless isEditMode}}read-mode{{/unless}}" autocomplete="off">
+  <header class="sheet-header">
+    <img src="{{actor.img}}" data-edit="img" title="{{actor.name}}"/>
+    <div class="sheet-header-main">
+      <h1><input name="name" type="text" value="{{actor.name}}" placeholder="Name" {{#unless isEditMode}}disabled{{/unless}} /></h1>
+      {{#if isNpc}}
+        <div class="npc-header-fields">
+          {{#if isEditMode}}
+            <div class="category-drop-header drop-zone" data-drop-area="npc-category">
+              <span class="label">Category</span>
+              <span class="drop-hint">{{#if system.category}}{{system.category}}{{else}}Drop Category Here{{/if}}</span>
+            </div>
+          {{else}}
+            <div class="category-label">
+              <span class="label">Category</span>
+              <strong>{{#if system.category}} {{system.category}}{{else}} Unassigned{{/if}}</strong>
+            </div>
+          {{/if}}
+          <label><span>Role</span><select name="system.role" {{#unless isEditMode}}disabled{{/unless}}>
+            {{#each npcRoleOptions as |role|}}
+              <option value="{{role.value}}" {{#if (eq @root.system.role role.value)}}selected{{/if}}>{{role.label}}</option>
+            {{/each}}
+          </select></label>
+          <label><span>Level</span><input name="system.level" type="number" value="{{system.level}}" min="1" max="20" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          <label class="npc-toggle-field"><span>Monstrous</span><input name="system.monstrous" type="checkbox" {{#if system.monstrous}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
+          <label class="npc-toggle-field"><span>Aura Actions</span><input name="system.auraActions" type="checkbox" {{#if system.auraActions}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
+        </div>
+      {{else}}
+      <div class="flex-row level-row">
+        <label>Level</label>
+        <input name="system.level" type="number" value="{{system.level}}" min="1" max="20" {{#unless isEditMode}}disabled{{/unless}} />
+        <span class="base-health-label">Base Health: {{system.baseHealth}}</span>
+      </div>
+      <div class="header-drop-group">
+        {{#if isEditMode}}
+          <div class="profession-drop-header drop-zone" data-drop-area="creation">
+            <span class="label">Profession</span>
+            <span class="drop-hint">{{#if system.profession}}{{system.profession}}{{else}}Drop Profession Here{{/if}}</span>
+          </div>
+        {{else}}
+          <div class="profession-label">
+            <span class="label">Profession</span>
+            <strong>{{#if system.profession}} {{system.profession}}{{else}} Unassigned{{/if}}</strong>
+          </div>
+        {{/if}}
+
+        {{#if isEditMode}}
+          <div class="race-drop-header drop-zone" data-drop-area="race">
+            <span class="label">Race</span>
+            <span class="drop-hint">{{#if system.race}}{{system.race}}{{else}}Drop Race Here{{/if}}</span>
+          </div>
+        {{else}}
+          <div class="race-label">
+            <span class="label">Race</span>
+            <strong>{{#if system.race}} {{system.race}}{{else}} Unassigned{{/if}}</strong>
+          </div>
+        {{/if}}
+
+        <div class="scar-label-group">
+          <span class="label">Scars</span>
+          <div class="scar-pip-group">
+            {{#each scarPips as |pip|}}
+              <button type="button" class="scar-pip {{#if pip.active}}active{{/if}}" data-scar-index="{{pip.index}}" aria-label="Scar {{pip.index}}" {{#unless ../isEditMode}}disabled{{/unless}}>{{#if pip.active}}<i class="fas fa-skull"></i>{{/if}}</button>
+            {{/each}}
+          </div>
+        </div>
+      </div>
+      {{/if}}
+    </div>
+    <div class="sheet-controls">
+      <label class="edit-toggle">
+        <input type="checkbox" data-edit-toggle {{#if isEditMode}}checked{{/if}} /> Edit Mode
+      </label>
+      {{#if isCharacter}}
+      <div class="rest-controls">
+        <button type="button" class="rest-button" data-rest-type="short">Short Rest</button>
+        <button type="button" class="rest-button" data-rest-type="long">Long Rest</button>
+      </div>
+      {{/if}}
+    </div>
+  </header>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="summary">Summary</a>
+    {{#if isCharacter}}
+    <a class="item" data-tab="skills">Skills</a>
+    {{/if}}
+    <a class="item" data-tab="combat">Combat</a>
+    <a class="item" data-tab="equipment">Items</a>
+    <a class="item" data-tab="notes">Notes</a>
+  </nav>
+
+  <section class="sheet-body">
+    <div class="tab" data-group="primary" data-tab="summary">
+      <div class="sheet-grid">
+        <div class="stat-block attribute-panel">
+          <h3>Attributes</h3>
+          {{#if isNpc}}
+            <div class="npc-attribute-budget">
+              <span>Points {{npcAttributeTotal}} / {{npcAttributeBudget}}</span>
+            </div>
+          {{/if}}
+          {{#each attributeEntries as |attribute|}}
+            <div class="attribute-row">
+              <label>{{attribute.label}}</label>
+              <input class="attribute-value-input" name="system.attributes.{{attribute.key}}" type="number" value="{{attribute.value}}" min="1" max="{{attribute.max}}" {{#unless ../isEditMode}}disabled{{/unless}} />
+              <button type="button" class="save-roll" data-attribute="{{attribute.key}}" data-target="{{attribute.target}}">
+                Save: {{attribute.target}}
+              </button>
+              {{#if @root.isNpc}}
+                <button type="button" class="attribute-check-roll" data-attribute="{{attribute.key}}" data-target="{{attribute.checkTarget}}">
+                  Check: {{attribute.checkTarget}}
+                </button>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+
+        <div class="stat-block detail-panel">
+          <div class="detail-tab-nav">
+            <button type="button" class="detail-tab {{#if (eq activeDetailTab "vitals")}}active{{/if}}" data-tab="vitals">Vitals</button>
+            <button type="button" class="detail-tab {{#if (eq activeDetailTab "resistances")}}active{{/if}}" data-tab="resistances">Resistances</button>
+            {{#if isCharacter}}
+            <button type="button" class="detail-tab {{#if (eq activeDetailTab "healing")}}active{{/if}}" data-tab="healing">Healing</button>
+            {{/if}}
+          </div>
+
+          <div class="detail-tab-content {{#if (eq activeDetailTab "vitals")}}active{{/if}}" data-tab-content="vitals">
+            <div class="vital-panel">
+              <div class="resource-box">
+                <div class="resource-header">
+                  <label>Health</label>
+                  <span>{{healthValue}} / {{healthMax}}</span>
+                  {{#if (gt system.health.modifier 0)}}<span class="vital-modifier-indicator positive" title="Modifier: +{{system.health.modifier}}">&#9650;{{system.health.modifier}}</span>{{/if}}{{#if (lt system.health.modifier 0)}}<span class="vital-modifier-indicator negative" title="Modifier: {{system.health.modifier}}">&#9660;{{system.health.modifier}}</span>{{/if}}
+                </div>
+                <div class="resource-bar" aria-label="Health Resource">
+                  <span style="width: {{healthPercent}}%"></span>
+                </div>
+                <div class="resource-adjuster">
+                  <label>Current</label>
+                  <input class="vital-field" data-vital-path="system.health.value" type="number" value="{{healthValue}}" min="0" max="{{healthMax}}" />
+                  {{#if @root.isNpc}}
+                    {{#if @root.isEditMode}}
+                    <label>Max</label>
+                    <input class="vital-field" data-vital-path="system.health.max" type="number" value="{{system.health.max}}" min="0" />
+                    {{/if}}
+                  {{/if}}
+                  <label>Modifier</label>
+                  <input class="vital-field" data-vital-path="system.health.modifier" type="number" value="{{system.health.modifier}}" />
+                </div>
+              </div>
+              {{#if isCharacter}}
+              <div class="resource-box resource-type-{{resourceType}}">
+                <div class="resource-header">
+                  <label>{{resourceLabel}}</label>
+                  <span>{{resourceValue}} / {{resourceMax}}</span>
+                  {{#if (gt system.resource.modifier 0)}}<span class="vital-modifier-indicator positive" title="Modifier: +{{system.resource.modifier}}">&#9650;{{system.resource.modifier}}</span>{{/if}}{{#if (lt system.resource.modifier 0)}}<span class="vital-modifier-indicator negative" title="Modifier: {{system.resource.modifier}}">&#9660;{{system.resource.modifier}}</span>{{/if}}
+                </div>
+                <div class="resource-bar resource-bar-{{resourceType}}" aria-label="{{resourceLabel}} Resource">
+                  <span style="width: {{resourcePercent}}%"></span>
+                </div>
+                <div class="resource-adjuster">
+                  <label>Current</label>
+                  <input class="vital-field" data-vital-path="system.resource.value" type="number" value="{{resourceValue}}" min="0" max="{{resourceMax}}" />
+                  <label>Modifier</label>
+                  <input class="vital-field" data-vital-path="system.resource.modifier" type="number" value="{{system.resource.modifier}}" />
+                </div>
+              </div>
+              {{/if}}
+              <div class="vital-grid">
+                <div class="resource-box compact-resource-box">
+                  <div class="resource-header">
+                    <label>Defense</label>
+                    <span>{{defenseValue}}</span>
+                  </div>
+                  <div class="resource-adjuster">
+                    {{#if @root.isNpc}}
+                      {{#if @root.isEditMode}}
+                        <label>Base</label>
+                        <input class="vital-field" data-vital-path="system.defense" type="number" value="{{system.defense}}" />
+                      {{/if}}
+                    {{/if}}
+                    <label>Modifier</label>
+                    <input class="vital-field" data-vital-path="system.defenseModifier" type="number" value="{{system.defenseModifier}}" />
+                  </div>
+                </div>
+
+                <div class="resource-box compact-resource-box">
+                  <div class="resource-header">
+                    <label>Movement</label>
+                    <span>{{movementValue}}</span>
+                  </div>
+                  <div class="resource-adjuster">
+                    {{#if @root.isNpc}}
+                      {{#if @root.isEditMode}}
+                        <label>Base</label>
+                        <input class="vital-field" data-vital-path="system.movement" type="number" value="{{system.movement}}" min="0" />
+                      {{/if}}
+                    {{/if}}
+                    <label>Modifier</label>
+                    <input class="vital-field" data-vital-path="system.movementModifier" type="number" value="{{system.movementModifier}}" />
+                  </div>
+                </div>
+                {{#if hasActiveCombat}}
+                <div class="resource-box compact-resource-box reaction-box {{#if reactionUsed}}reaction-used{{/if}}">
+                  <div class="resource-header">
+                    <label>Reaction</label>
+                    <span>{{#if reactionUsed}}Used{{else}}Available{{/if}}</span>
+                  </div>
+                  <div class="resource-adjuster">
+                    <button type="button" class="reaction-toggle" data-combatant-id="{{combatantId}}">{{#if reactionUsed}}Reset{{else}}Use Reaction{{/if}}</button>
+                  </div>
+                </div>
+                {{/if}}
+                {{#if @root.isNpc}}
+                <div class="resource-box compact-resource-box">
+                  <div class="resource-header">
+                    <label>Turns per Round</label>
+                    <span>{{system.turnsPerRound}}</span>
+                  </div>
+                  {{#if @root.isEditMode}}
+                  <div class="resource-adjuster">
+                    <label>Turns</label>
+                    <input class="vital-field" data-vital-path="system.turnsPerRound" type="number" value="{{system.turnsPerRound}}" min="1" />
+                  </div>
+                  {{/if}}
+                </div>
+                {{/if}}
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-tab-content {{#if (eq activeDetailTab "resistances")}}active{{/if}}" data-tab-content="resistances">
+            <div class="resistance-table-wrap">
+              <table class="resistance-table">
+                <thead>
+                  <tr>
+                    <th>Damage Type</th>
+                    <th>Base</th>
+                    <th>Modifier</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each resistanceRows as |row index|}}
+                    <tr class="resistance-row" data-resistance-index="{{index}}">
+                      <td>
+                        <span class="resistance-label">{{row.label}}</span>
+                      </td>
+                      <td>
+                        <input type="number" value="{{row.baseValue}}" readonly />
+                      </td>
+                      <td>
+                        <input class="resistance-modifier-input" data-resistance-type="{{row.type}}" name="system.resistanceMod.{{row.type}}" type="number" value="{{row.modifier}}" />
+                      </td>
+                      <td>
+                        <strong>{{row.totalValue}}</strong>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {{#if isCharacter}}
+          <div class="detail-tab-content {{#if (eq activeDetailTab "healing")}}active{{/if}}" data-tab-content="healing">
+            <div class="healing-table-wrap">
+              <table class="healing-table">
+                <thead>
+                  <tr>
+                    <th>Healed By</th>
+                    <th>Ability / Spell</th>
+                    <th>Times</th>
+                    <th>Reset</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#if healingEntries.length}}
+                    {{#each healingEntries as |entry index|}}
+                      <tr class="healing-row" data-healing-index="{{index}}">
+                        <td>
+                          <input class="healing-field healing-healer" data-field="healer" type="text" value="{{entry.healer}}" />
+                        </td>
+                        <td>
+                          <input class="healing-field healing-source" data-field="source" type="text" value="{{entry.source}}" />
+                        </td>
+                        <td>
+                          <input class="healing-field healing-times" data-field="times" type="number" min="0" value="{{entry.times}}" />
+                        </td>
+                        <td>
+                          <select class="healing-field healing-reset" data-field="reset">
+                            <option value="short-rest" {{#if (eq entry.reset "short-rest")}}selected{{/if}}>Short Rest</option>
+                            <option value="long-rest" {{#if (eq entry.reset "long-rest")}}selected{{/if}}>Long Rest</option>
+                          </select>
+                        </td>
+                        <td>
+                          <button type="button" class="remove-healing-row" data-index="{{index}}">Remove</button>
+                        </td>
+                      </tr>
+                    {{/each}}
+                  {{else}}
+                    <tr>
+                      <td colspan="{{#if isEditMode}}5{{else}}4{{/if}}" class="healing-empty">No healing entries recorded.</td>
+                    </tr>
+                  {{/if}}
+                </tbody>
+              </table>
+              <button type="button" class="add-healing-row">Add Healing Entry</button>
+            </div>
+          </div>
+          {{/if}}
+        </div>
+      </div>
+
+      {{#if isCharacter}}
+      <div class="feature-panels-row">
+        <div class="stat-block profession-features-block feature-panel">
+          <h3>Profession Features</h3>
+          {{#if professionFeatures.length}}
+            {{#each professionFeatures as |feature|}}
+              <details class="profession-feature-row" data-feature-level="{{feature.level}}">
+                <summary>
+                  <span>Level {{feature.level}}</span>
+                  {{#if feature.title}}<strong>{{feature.title}}</strong>{{else}}<strong>Feature</strong>{{/if}}
+                </summary>
+                <div class="profession-feature-details">
+                  <span class="action-type-badge">{{feature.actionTypeLabel}}</span>
+                  <p>{{feature.text}}</p>
+                  {{#if (or feature.resourceGain feature.resourceLoss)}}
+                    <div class="feature-resource-actions">
+                      {{#if feature.resourceGain}}
+                        <button type="button" class="profession-feature-resource" data-feature-level="{{feature.level}}" data-direction="gain">Gain {{feature.resourceGain}}</button>
+                      {{/if}}
+                      {{#if feature.resourceLoss}}
+                        <button type="button" class="profession-feature-resource" data-feature-level="{{feature.level}}" data-direction="loss">Lose {{feature.resourceLoss}}</button>
+                      {{/if}}
+                    </div>
+                  {{/if}}
+                  {{#if feature.hasArea}}
+                    <div class="feature-area-display">
+                      <span>{{feature.areaLabel}}</span>
+                    </div>
+                  {{/if}}
+                  <button type="button" class="profession-feature-send" data-feature-level="{{feature.level}}">Send to Chat</button>
+                </div>
+              </details>
+            {{/each}}
+          {{else}}
+            <p>No profession features available at this level.</p>
+          {{/if}}
+        </div>
+
+        {{#if hasRace}}
+          <div class="stat-block race-features-block feature-panel">
+            <h3>Race Features</h3>
+            {{#if raceFeatures.length}}
+              {{#each raceFeatures as |feature|}}
+                <details class="profession-feature-row" data-feature-level="{{feature.level}}">
+                  <summary>
+                    <span>Level {{feature.level}}</span>
+                    {{#if feature.title}}<strong>{{feature.title}}</strong>{{else}}<strong>Feature</strong>{{/if}}
+                  </summary>
+                  <div class="profession-feature-details">
+                    <span class="action-type-badge">{{feature.actionTypeLabel}}</span>
+                    <p>{{feature.text}}</p>
+                    {{#if feature.uses}}
+                      <p class="feature-uses">Used: {{feature.usedCount}} / {{feature.uses}} | Remaining: {{feature.remainingUses}}</p>
+                      <div class="feature-use-actions">
+                        <button type="button" class="race-feature-use" data-feature-level="{{feature.level}}" data-action="use" {{#if (gte feature.usedCount feature.uses)}}disabled{{/if}}>Use</button>
+                        <button type="button" class="race-feature-use" data-feature-level="{{feature.level}}" data-action="undo" {{#if (lte feature.usedCount 0)}}disabled{{/if}}>Undo</button>
+                      </div>
+                    {{/if}}
+                    {{#if feature.hasArea}}
+                      <div class="feature-area-display">
+                        <span>{{feature.areaLabel}}</span>
+                      </div>
+                    {{/if}}
+                    <button type="button" class="race-feature-send" data-feature-level="{{feature.level}}">Send to Chat</button>
+                  </div>
+                </details>
+              {{/each}}
+            {{else}}
+              <p>No race features available at this level.</p>
+            {{/if}}
+          </div>
+        {{/if}}
+      </div>
+      {{else}}
+      <div class="npc-feature-displayers">
+        <details class="stat-block npc-traits-block npc-feature-displayer" open>
+          <summary><h3>Traits</h3></summary>
+          <div class="npc-feature-displayer-body">
+            {{#if system.traits}}<p>{{system.traits}}</p>{{/if}}
+            <div class="npc-trait-point-limit">
+              <span>Points {{traitPointTotal}} / {{traitPointMax}}</span>
+              {{#if isEditMode}}
+                <label>Modifier <input class="vital-field" data-vital-path="system.traitPointModifier" type="number" value="{{traitPointModifier}}" /></label>
+              {{/if}}
+            </div>
+            {{#if npcTraitItems.length}}
+              {{#each npcTraitItems as |item|}}
+                <div class="npc-feature-item-row npc-trait-item-row" data-item-id="{{item.id}}" title="{{#if @root.isEditMode}}Right-click to remove{{/if}}">
+                  <button type="button" class="npc-feature-open" data-item-id="{{item.id}}">{{item.name}}</button>
+                  <span class="npc-feature-item-cost">{{item.pointCost}} pt{{#unless (eq item.pointCost 1)}}s{{/unless}}</span>
+                  <button type="button" class="npc-feature-chat" data-item-id="{{item.id}}">Send to Chat</button>
+                </div>
+              {{/each}}
+            {{else}}
+              <p>No Trait items.</p>
+            {{/if}}
+          </div>
+        </details>
+        {{#if hasCategory}}
+        <details class="stat-block npc-category-traits-block npc-feature-displayer" open>
+          <summary><h3>Category Traits{{#if system.category}} ({{system.category}}){{/if}}</h3></summary>
+          <div class="npc-feature-displayer-body">
+            {{#if categoryTraitBuckets.length}}
+              {{#each categoryTraitBuckets as |bucket|}}
+                <h4 class="category-trait-bucket-label">{{bucket.label}}</h4>
+                {{#if bucket.chosen}}
+                  <div class="category-trait-choice-row" data-entry-uuid="{{bucket.chosen.uuid}}">
+                    <button type="button" class="category-trait-entry-open" data-entry-uuid="{{bucket.chosen.uuid}}">{{bucket.chosen.name}}</button>
+                    <button type="button" class="category-trait-chat" data-entry-uuid="{{bucket.chosen.uuid}}">Send to Chat</button>
+                  </div>
+                {{else}}
+                  <p class="category-trait-empty">No choice made yet.</p>
+                {{/if}}
+              {{/each}}
+            {{else}}
+              <p>No Category Traits unlocked at this level.</p>
+            {{/if}}
+          </div>
+        </details>
+        {{/if}}
+        {{#if system.auraActions}}
+        <details class="stat-block npc-aura-actions-block npc-feature-displayer" open>
+          <summary><h3>Aura Actions</h3></summary>
+          <div class="npc-feature-displayer-body">
+            <div class="npc-aura-action-limit">
+              <span>Actions {{npcActionItems.length}} / {{auraActionCount}}</span>
+              {{#if isEditMode}}
+                <label>Maximum <input class="vital-field" data-vital-path="system.auraActionCount" type="number" value="{{auraActionCount}}" min="0" /></label>
+              {{/if}}
+            </div>
+            {{#if npcActionItems.length}}
+              {{#each npcActionItems as |item|}}
+                <div class="npc-feature-item-row" data-item-id="{{item.id}}" title="{{#if @root.isEditMode}}Right-click to remove{{/if}}">
+                  <button type="button" class="npc-feature-open" data-item-id="{{item.id}}">{{item.name}}</button>
+                  <button type="button" class="npc-feature-chat" data-item-id="{{item.id}}">Send to Chat</button>
+                </div>
+              {{/each}}
+            {{else}}
+              <p>No NPC Action items.</p>
+            {{/if}}
+          </div>
+        </details>
+        {{/if}}
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="skills">
+      {{#if favoriteSkillEntries.length}}
+        <details class="stat-block skill-group-block favorite-skills-block" open>
+          <summary><h3>Favorite Skills</h3></summary>
+          <div class="skill-group-entries">
+            {{#each favoriteSkillEntries as |skill|}}
+            <div class="skill-row-wrap">
+              <div class="skill-row">
+                <button type="button" class="skill-favorite-toggle active" data-skill="{{skill.key}}" aria-label="Remove {{skill.label}} from favorites" title="Remove Favorite"><i class="fas fa-star"></i></button>
+                <button type="button" class="skill-display-roll" draggable="true" data-skill="{{skill.key}}" data-skill-label="{{skill.label}}" data-actor-id="{{@root.actor.id}}" aria-label="Roll d100 for {{skill.label}}" title="Roll d100 or drag to macro bar">
+                  <span class="skill-display-name">{{skill.label}}</span>
+                  <span class="skill-display-value">{{skill.value}}</span>
+                </button>
+              </div>
+              {{#if skill.talentSlots.length}}
+                <div class="skill-talent-slots">
+                  {{#each skill.talentSlots as |slot|}}
+                    <div class="skill-talent-slot" data-skill="{{../key}}" data-milestone="{{slot.milestone}}" data-max-tier="{{slot.maxTier}}">
+                      {{#if slot.talent}}
+                        <div class="skill-talent-row" data-talent-id="{{slot.talent.id}}" title="Right-click to remove">
+                          <span class="skill-talent-name">{{slot.talent.name}}</span>
+                          <span class="skill-talent-meta">T{{slot.talent.tier}} · {{slot.talent.actionTypeLabel}}</span>
+                          <button type="button" class="skill-talent-send" data-talent-id="{{slot.talent.id}}" title="Send to chat" aria-label="Send {{slot.talent.name}} to chat"><i class="fas fa-comment"></i></button>
+                        </div>
+                      {{else}}
+                        <span class="skill-talent-empty">{{slot.label}}</span>
+                      {{/if}}
+                    </div>
+                  {{/each}}
+                </div>
+              {{/if}}
+            </div>
+            {{/each}}
+          </div>
+        </details>
+      {{/if}}
+      <div class="skill-groups">
+        {{#each skillGroups as |group|}}
+          <details class="stat-block skill-group-block {{#if (eq group.label "General")}}general-skill-block{{/if}}{{#if (eq group.label "Weapon")}} weapon-skill-block{{/if}}{{#if (eq group.label "Defense")}} defense-skill-block{{/if}}{{#if (eq group.label "Magic")}} magic-skill-block{{/if}}" open>
+            <summary><h3>{{group.label}}</h3></summary>
+            <div class="skill-group-entries">
+              {{#each group.entries as |skill|}}
+                <div class="skill-row-wrap">
+                  <div class="skill-row">
+                    {{#if @root.isEditMode}}
+                      <label>{{skill.label}}</label>
+                      <input name="system.skills.{{skill.key}}" type="number" value="{{skill.value}}" min="0" max="9" />
+                    {{else}}
+                      <button type="button" class="skill-favorite-toggle {{#if skill.favorite}}active{{/if}}" data-skill="{{skill.key}}" aria-label="{{#if skill.favorite}}Remove {{skill.label}} from favorites{{else}}Add {{skill.label}} to favorites{{/if}}" title="{{#if skill.favorite}}Remove Favorite{{else}}Add Favorite{{/if}}"><i class="fas fa-star"></i></button>
+                      <button type="button" class="skill-display-roll" draggable="true" data-skill="{{skill.key}}" data-skill-label="{{skill.label}}" data-actor-id="{{@root.actor.id}}" aria-label="Roll d100 for {{skill.label}}" title="Roll d100 or drag to macro bar">
+                        <span class="skill-display-name">{{skill.label}}</span>
+                        <span class="skill-display-value">{{skill.value}}</span>
+                      </button>
+                    {{/if}}
+                  </div>
+                  {{#unless @root.isEditMode}}
+                  {{#if skill.talentSlots.length}}
+                    <div class="skill-talent-slots">
+                      {{#each skill.talentSlots as |slot|}}
+                        <div class="skill-talent-slot" data-skill="{{../key}}" data-milestone="{{slot.milestone}}" data-max-tier="{{slot.maxTier}}">
+                          {{#if slot.talent}}
+                            <div class="skill-talent-row" data-talent-id="{{slot.talent.id}}" title="Right-click to remove">
+                              <span class="skill-talent-name">{{slot.talent.name}}</span>
+                              <span class="skill-talent-meta">T{{slot.talent.tier}} · {{slot.talent.actionTypeLabel}}</span>
+                              <button type="button" class="skill-talent-send" data-talent-id="{{slot.talent.id}}" title="Send to chat" aria-label="Send {{slot.talent.name}} to chat"><i class="fas fa-comment"></i></button>
+                            </div>
+                          {{else}}
+                            <span class="skill-talent-empty">{{slot.label}}</span>
+                          {{/if}}
+                        </div>
+                      {{/each}}
+                    </div>
+                  {{/if}}
+                  {{/unless}}
+                </div>
+              {{/each}}
+            </div>
+          </details>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="combat">
+      <div class="sheet-grid combat-page-grid">
+        <div class="stat-block combat-vitals-block">
+          <h3>Vitals</h3>
+          {{#if isNpc}}
+          <div class="vital-panel">
+            <div class="resource-box">
+              <div class="resource-header">
+                <label>Health</label>
+                <span>{{healthValue}} / {{healthMax}}</span>
+                {{#if (gt system.health.modifier 0)}}<span class="vital-modifier-indicator positive" title="Modifier: +{{system.health.modifier}}">&#9650;{{system.health.modifier}}</span>{{/if}}{{#if (lt system.health.modifier 0)}}<span class="vital-modifier-indicator negative" title="Modifier: {{system.health.modifier}}">&#9660;{{system.health.modifier}}</span>{{/if}}
+              </div>
+              <div class="resource-bar" aria-label="Health Resource">
+                <span style="width: {{healthPercent}}%"></span>
+              </div>
+              <div class="resource-adjuster">
+                <label>Current</label>
+                <input class="vital-field" data-vital-path="system.health.value" type="number" value="{{healthValue}}" min="0" max="{{healthMax}}" />
+                {{#if isEditMode}}
+                  <label>Max</label>
+                  <input class="vital-field" data-vital-path="system.health.max" type="number" value="{{system.health.max}}" min="0" />
+                {{/if}}
+                <label>Modifier</label>
+                <input class="vital-field" data-vital-path="system.health.modifier" type="number" value="{{system.health.modifier}}" />
+              </div>
+            </div>
+            <div class="vital-grid">
+              <div class="resource-box compact-resource-box">
+                <div class="resource-header"><label>Defense</label><span>{{defenseValue}}</span></div>
+                <div class="resource-adjuster">
+                  {{#if isEditMode}}<label>Base</label><input class="vital-field" data-vital-path="system.defense" type="number" value="{{system.defense}}" />{{/if}}
+                  <label>Modifier</label><input class="vital-field" data-vital-path="system.defenseModifier" type="number" value="{{system.defenseModifier}}" />
+                </div>
+              </div>
+              <div class="resource-box compact-resource-box">
+                <div class="resource-header"><label>Movement</label><span>{{movementValue}}</span></div>
+                <div class="resource-adjuster">
+                  {{#if isEditMode}}<label>Base</label><input class="vital-field" data-vital-path="system.movement" type="number" value="{{system.movement}}" min="0" />{{/if}}
+                  <label>Modifier</label><input class="vital-field" data-vital-path="system.movementModifier" type="number" value="{{system.movementModifier}}" />
+                </div>
+              </div>
+              {{#if hasActiveCombat}}
+              <div class="resource-box compact-resource-box reaction-box {{#if reactionUsed}}reaction-used{{/if}}">
+                <div class="resource-header"><label>Reaction</label><span>{{#if reactionUsed}}Used{{else}}Available{{/if}}</span></div>
+                <div class="resource-adjuster">
+                  <button type="button" class="reaction-toggle" data-combatant-id="{{combatantId}}">{{#if reactionUsed}}Reset{{else}}Use Reaction{{/if}}</button>
+                </div>
+              </div>
+              {{/if}}
+              <div class="resource-box compact-resource-box">
+                <div class="resource-header"><label>Turns per Round</label><span>{{system.turnsPerRound}}</span></div>
+                {{#if isEditMode}}<div class="resource-adjuster"><label>Turns</label><input class="vital-field" data-vital-path="system.turnsPerRound" type="number" value="{{system.turnsPerRound}}" min="1" /></div>{{/if}}
+              </div>
+            </div>
+          </div>
+          {{else}}
+          <div class="vital-panel">
+            <div class="resource-box">
+              <div class="resource-header">
+                <label>Health</label>
+                <span>{{healthValue}} / {{healthMax}}</span>
+                {{#if (gt system.health.modifier 0)}}<span class="vital-modifier-indicator positive" title="Modifier: +{{system.health.modifier}}">&#9650;{{system.health.modifier}}</span>{{/if}}{{#if (lt system.health.modifier 0)}}<span class="vital-modifier-indicator negative" title="Modifier: {{system.health.modifier}}">&#9660;{{system.health.modifier}}</span>{{/if}}
+              </div>
+              <div class="resource-bar" aria-label="Health Resource">
+                <span style="width: {{healthPercent}}%"></span>
+              </div>
+              <div class="resource-adjuster">
+                <label>Current</label>
+                <input class="vital-field" data-vital-path="system.health.value" type="number" value="{{healthValue}}" min="0" max="{{healthMax}}" />
+                <label>Modifier</label>
+                <input class="vital-field" data-vital-path="system.health.modifier" type="number" value="{{system.health.modifier}}" />
+              </div>
+            </div>
+            <div class="resource-box resource-type-{{resourceType}}">
+              <div class="resource-header">
+                <label>{{resourceLabel}}</label>
+                <span>{{resourceValue}} / {{resourceMax}}</span>
+                {{#if (gt system.resource.modifier 0)}}<span class="vital-modifier-indicator positive" title="Modifier: +{{system.resource.modifier}}">&#9650;{{system.resource.modifier}}</span>{{/if}}{{#if (lt system.resource.modifier 0)}}<span class="vital-modifier-indicator negative" title="Modifier: {{system.resource.modifier}}">&#9660;{{system.resource.modifier}}</span>{{/if}}
+              </div>
+              <div class="resource-bar resource-bar-{{resourceType}}" aria-label="{{resourceLabel}} Resource">
+                <span style="width: {{resourcePercent}}%"></span>
+              </div>
+              <div class="resource-adjuster">
+                <label>Current</label>
+                <input class="vital-field" data-vital-path="system.resource.value" type="number" value="{{resourceValue}}" min="0" max="{{resourceMax}}" />
+                <label>Modifier</label>
+                <input class="vital-field" data-vital-path="system.resource.modifier" type="number" value="{{system.resource.modifier}}" />
+              </div>
+            </div>
+            <div class="vital-grid">
+              <div class="resource-box compact-resource-box">
+                <div class="resource-header">
+                  <label>Defense</label>
+                  <span>{{defenseValue}}</span>
+                </div>
+                <div class="resource-adjuster">
+                  <label>Modifier</label>
+                  <input class="vital-field" data-vital-path="system.defenseModifier" type="number" value="{{system.defenseModifier}}" />
+                </div>
+              </div>
+              <div class="resource-box compact-resource-box">
+                <div class="resource-header">
+                  <label>Movement</label>
+                  <span>{{movementValue}}</span>
+                </div>
+                <div class="resource-adjuster">
+                  <label>Modifier</label>
+                  <input class="vital-field" data-vital-path="system.movementModifier" type="number" value="{{system.movementModifier}}" />
+                </div>
+              </div>
+              {{#if hasActiveCombat}}
+              <div class="resource-box compact-resource-box reaction-box {{#if reactionUsed}}reaction-used{{/if}}">
+                <div class="resource-header">
+                  <label>Reaction</label>
+                  <span>{{#if reactionUsed}}Used{{else}}Available{{/if}}</span>
+                </div>
+                <div class="resource-adjuster">
+                  <button type="button" class="reaction-toggle" data-combatant-id="{{combatantId}}">{{#if reactionUsed}}Reset{{else}}Use Reaction{{/if}}</button>
+                </div>
+              </div>
+              {{/if}}
+            </div>
+          </div>
+          {{/if}}
+        </div>
+
+        {{#if isNpc}}
+        <div class="stat-block npc-actions-block">
+          <h3>Actions</h3>
+          {{#if npcCombatActions.length}}
+            <div class="npc-action-table">
+              <div class="npc-action-table-header">
+                <span>Name</span><span>Range</span><span>Action Type</span><span>Dice</span><span>Damage / Healing</span><span>Recharge</span>
+              </div>
+              {{#each npcCombatActions as |action|}}
+                <div class="npc-action-row" data-item-id="{{action.id}}">
+                  <button type="button" class="npc-action-use" data-item-id="{{action.id}}" {{#unless action.usable}}disabled{{/unless}}>{{action.name}}</button>
+                  <span>{{action.range}}</span>
+                  <span>{{action.actionTypeLabel}}</span>
+                  <span>{{action.dice}}</span>
+                  <span>{{action.effectLabel}}</span>
+                  <span>
+                    {{#if action.hasRecharge}}
+                      <span class="npc-action-recharge-label">{{action.rechargeProgress}} / {{action.recharge}}</span>
+                      <span class="npc-action-recharge-bar"><span style="width: {{action.rechargePercent}}%"></span></span>
+                    {{/if}}
+                  </span>
+                </div>
+              {{/each}}
+            </div>
+          {{else}}
+            <p>No NPC Actions.</p>
+          {{/if}}
+        </div>
+        {{/if}}
+
+        <div class="stat-block weapon-technique-block">
+          <h3>Weapon Technique</h3>
+          {{#if activeWeaponTechnique}}
+            <div class="weapon-technique-active">
+              <div class="weapon-technique-active-header">
+                <strong>{{activeWeaponTechnique.itemName}}</strong>
+                <span>{{activeWeaponTechnique.skillLabel}}</span>
+              </div>
+              {{#each activeWeaponTechnique.stages as |stage|}}
+                <div class="weapon-technique-stage-entry {{#if stage.isCurrent}}current{{else}}locked{{/if}}">
+                  <div class="weapon-technique-stage-row">
+                    <span>Stage {{stage.stageNumber}}: {{stage.name}}</span>
+                    {{#if stage.isCurrent}}
+                      {{#unless @root.activeWeaponTechnique.isFinalStage}}
+                        <button type="button" class="weapon-technique-advance">
+                          Advance{{#if stage.resourceCostToAdvance}} ({{stage.resourceCostToAdvance}} Resource){{/if}}
+                        </button>
+                      {{/unless}}
+                    {{/if}}
+                  </div>
+                  {{#if stage.isCurrent}}
+                    <div class="weapon-technique-option-choices">
+                      {{#each stage.options as |option|}}
+                        <button type="button" class="weapon-technique-choose-option {{#if option.chosen}}chosen{{/if}}" data-stage-key="{{stage.stageKey}}" data-option-key="{{option.key}}" title="{{option.description}}">
+                          {{option.name}}
+                        </button>
+                      {{/each}}
+                    </div>
+                    {{#if stage.chosenOption}}
+                      <button type="button" class="weapon-technique-send-chat" data-stage-key="{{stage.stageKey}}">Send to Chat</button>
+                    {{else}}
+                      <p class="weapon-technique-empty">Choose an option for this stage.</p>
+                    {{/if}}
+                  {{else}}
+                    {{#if stage.chosenOption}}
+                      <div class="weapon-technique-locked-choice" title="{{stage.chosenOption.description}}">
+                        <span>Active: {{stage.chosenOption.name}}</span>
+                        <button type="button" class="weapon-technique-send-chat" data-stage-key="{{stage.stageKey}}">Send to Chat</button>
+                      </div>
+                    {{else}}
+                      <p class="weapon-technique-empty">No option was chosen for this stage.</p>
+                    {{/if}}
+                  {{/if}}
+                </div>
+              {{/each}}
+              <button type="button" class="weapon-technique-stop">Stop Concentrating</button>
+            </div>
+          {{else}}
+            <div class="weapon-technique-select-row">
+              <select class="weapon-technique-select">
+                {{#if weaponTechniqueItems.length}}
+                  {{#each weaponTechniqueItems as |technique|}}
+                    <option value="{{technique.id}}">{{technique.name}}</option>
+                  {{/each}}
+                {{else}}
+                  <option value="">No Weapon Techniques available</option>
+                {{/if}}
+              </select>
+              <button type="button" class="weapon-technique-start" {{#unless weaponTechniqueItems.length}}disabled{{/unless}}>Concentrate</button>
+            </div>
+            <p class="weapon-technique-empty">Drag a Weapon Technique item onto this sheet to make it available here.</p>
+          {{/if}}
+        </div>
+
+        <div class="stat-block combat-equipment-block">
+          <h3>Equipment</h3>
+          <h4>Weapons</h4>
+          {{#if weaponItems.length}}
+            {{#each weaponItems as |weapon|}}
+              <div class="weapon-display-row" data-item-id="{{weapon.id}}" title="Open item sheet">
+                <div class="weapon-display-header">
+                  <strong>{{weapon.name}}</strong>
+                  <span>{{weapon.skillLabel}} ({{weapon.skillValue}})</span>
+                </div>
+                <div class="weapon-display-meta">
+                  <span>Damage: {{weapon.damage}}</span>
+                  <span>Range: {{weapon.range}}</span>
+                  <span>Break Points: {{weapon.breakPoints}}</span>
+                </div>
+                <div class="weapon-display-actions">
+                  <button type="button" class="weapon-unequip" data-item-id="{{weapon.id}}">Unequip</button>
+                  <button type="button" class="weapon-skill-roll" data-item-id="{{weapon.id}}">Weapon Skill</button>
+                  <button type="button" class="weapon-description" data-item-id="{{weapon.id}}">Description</button>
+                </div>
+              </div>
+            {{/each}}
+          {{else}}
+            <p>No weapons equipped yet.</p>
+          {{/if}}
+          <div class="armor-shield-displayers">
+            <section class="armor-shield-displayer">
+              <h4>Armor</h4>
+              {{#if armorItems.length}}
+                {{#each armorItems as |armor|}}
+                  <div class="weapon-display-row" data-item-id="{{armor.id}}" title="Open item sheet">
+                    <div class="weapon-display-header">
+                      <strong>{{armor.name}}</strong>
+                    </div>
+                    <div class="weapon-display-meta">
+                      <span>Defense: {{armor.defense}}</span>
+                      <span>Break Points: {{armor.breakPoints}}</span>
+                    </div>
+                    <div class="weapon-display-actions">
+                      <button type="button" class="gear-description" data-item-id="{{armor.id}}">Description</button>
+                    </div>
+                  </div>
+                {{/each}}
+              {{else}}
+                <p>No armor equipped yet.</p>
+              {{/if}}
+            </section>
+            <section class="armor-shield-displayer">
+              <h4>Shields</h4>
+              {{#if shieldItems.length}}
+                {{#each shieldItems as |shield|}}
+                  <div class="weapon-display-row" data-item-id="{{shield.id}}" title="Open item sheet">
+                    <div class="weapon-display-header">
+                      <strong>{{shield.name}}</strong>
+                    </div>
+                    <div class="weapon-display-meta">
+                      <span>Defense: {{shield.defense}}</span>
+                      <span>Break Points: {{shield.breakPoints}}</span>
+                    </div>
+                    <div class="weapon-display-actions">
+                      {{#if shield.isBlocking}}
+                        <button type="button" class="shield-lower" data-item-id="{{shield.id}}">Lower Shield</button>
+                      {{else}}
+                        <button type="button" class="shield-block" data-item-id="{{shield.id}}">Block</button>
+                      {{/if}}
+                      <button type="button" class="gear-description" data-item-id="{{shield.id}}">Description</button>
+                    </div>
+                  </div>
+                {{/each}}
+              {{else}}
+                <p>No shields equipped yet.</p>
+              {{/if}}
+            </section>
+          </div>
+        </div>
+
+        <div class="stat-block spell-block combat-spell-block">
+          <h3>Spells</h3>
+          {{#if spellTabs.length}}
+            <div class="magic-tab-nav">
+              {{#each spellTabs as |tab|}}
+                <button type="button" class="magic-skill-tab {{#if (eq tab.key ../activeMagicSkill)}}active{{/if}}" data-skill="{{tab.key}}">{{tab.label}}</button>
+              {{/each}}
+            </div>
+            <div class="magic-tab-panels">
+              {{#each spellTabs as |tab|}}
+                <div class="magic-skill-panel {{#if (eq tab.key ../activeMagicSkill)}}active{{/if}} spell-drop-zone" data-skill-panel="{{tab.key}}" data-skill="{{tab.key}}">
+                  {{#if tab.entries.length}}
+                    <div class="spell-table">
+                      <div class="spell-table-header">
+                        <span>Spell</span>
+                        <span>Action</span>
+                        <span>Range</span>
+                        <span>Magic Skill Check</span>
+                        <span>Damage / Healing</span>
+                        <span>Resource Cost</span>
+                        <span>Empowerment Cost</span>
+                      </div>
+                      {{#each tab.entries as |spell|}}
+                        <div class="spell-table-row" data-item-id="{{spell.id}}" title="Open spell item{{#if @root.isEditMode}}; right-click to remove{{/if}}">
+                          <span>{{spell.name}}</span>
+                          <span>{{spell.actionTypeLabel}}</span>
+                          <span>{{spell.range}}</span>
+                          <button type="button" class="spell-magic-roll" data-item-id="{{spell.id}}" data-skill="{{spell.magicSkillCheck}}">Cast</button>
+                          <span>{{spell.damageHealingLabel}}</span>
+                          <span>{{spell.resourceCost}}</span>
+                          <span>{{spell.empowermentCost}}</span>
+                        </div>
+                      {{/each}}
+                    </div>
+                  {{else}}
+                    <p>Drop magic items here for {{tab.label}}.</p>
+                  {{/if}}
+                </div>
+              {{/each}}
+            </div>
+          {{else}}
+            <p>No magic skills available.</p>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="equipment">
+      <div class="sheet-grid items-page-grid">
+        <div class="stat-block item-list-block full-width-equipment-block">
+          <h3>Equipped Items</h3>
+            <div class="equipped-item-displayers">
+              <section><h4>Weapons</h4>{{#if equippedWeapons.length}}{{#each equippedWeapons as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>Tier {{item.tier}}{{#if item.actionTypeLabel}} · {{item.actionTypeLabel}}{{/if}}</span></button>{{/each}}{{else}}<p>No equipped weapons.</p>{{/if}}</section>
+              <section><h4>Shields</h4>{{#if equippedShields.length}}{{#each equippedShields as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>Tier {{item.tier}}{{#if item.actionTypeLabel}} · {{item.actionTypeLabel}}{{/if}}</span></button>{{/each}}{{else}}<p>No equipped shields.</p>{{/if}}</section>
+              <section><h4>Armor</h4>{{#if equippedArmor.length}}{{#each equippedArmor as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>Tier {{item.tier}}{{#if item.actionTypeLabel}} · {{item.actionTypeLabel}}{{/if}}</span></button>{{/each}}{{else}}<p>No equipped armor.</p>{{/if}}</section>
+              <section><h4>Magic Items</h4>{{#if equippedMagicItems.length}}{{#each equippedMagicItems as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>Tier {{item.tier}}{{#if item.actionTypeLabel}} · {{item.actionTypeLabel}}{{/if}}</span></button>{{/each}}{{else}}<p>No equipped magic items.</p>{{/if}}</section>
+            </div>
+        </div>
+        <div class="stat-block item-list-block full-width-equipment-block">
+          <h3>Unequipped Items</h3>
+            <div class="unequipped-item-tabs">
+            <button type="button" class="unequipped-item-tab {{#if (eq activeUnequippedItemTab "weapon")}}active{{/if}}" data-category="weapon">Weapons</button>
+            <button type="button" class="unequipped-item-tab {{#if (eq activeUnequippedItemTab "armor")}}active{{/if}}" data-category="armor">Armor</button>
+            <button type="button" class="unequipped-item-tab {{#if (eq activeUnequippedItemTab "shield")}}active{{/if}}" data-category="shield">Shields</button>
+            <button type="button" class="unequipped-item-tab {{#if (eq activeUnequippedItemTab "magic_item")}}active{{/if}}" data-category="magic_item">Magic Items</button>
+          </div>
+          <div class="unequipped-item-panels">
+            <div class="unequipped-item-panel {{#if (eq activeUnequippedItemTab "weapon")}}active{{/if}}" data-category-panel="weapon">
+              {{#if unequippedWeapons.length}}{{#each unequippedWeapons as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>Tier {{item.tier}}{{#if item.actionTypeLabel}} · {{item.actionTypeLabel}}{{/if}}</span></button>{{/each}}{{else}}<p>No unequipped weapons.</p>{{/if}}
+            </div>
+            <div class="unequipped-item-panel {{#if (eq activeUnequippedItemTab "armor")}}active{{/if}}" data-category-panel="armor">
+              {{#if unequippedArmor.length}}{{#each unequippedArmor as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>Tier {{item.tier}}{{#if item.actionTypeLabel}} · {{item.actionTypeLabel}}{{/if}}</span></button>{{/each}}{{else}}<p>No unequipped armor.</p>{{/if}}
+            </div>
+            <div class="unequipped-item-panel {{#if (eq activeUnequippedItemTab "shield")}}active{{/if}}" data-category-panel="shield">
+              {{#if unequippedShields.length}}{{#each unequippedShields as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>Tier {{item.tier}}{{#if item.actionTypeLabel}} · {{item.actionTypeLabel}}{{/if}}</span></button>{{/each}}{{else}}<p>No unequipped shields.</p>{{/if}}
+            </div>
+            <div class="unequipped-item-panel {{#if (eq activeUnequippedItemTab "magic_item")}}active{{/if}}" data-category-panel="magic_item">
+              {{#if unequippedMagicItems.length}}{{#each unequippedMagicItems as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>Tier {{item.tier}}{{#if item.actionTypeLabel}} · {{item.actionTypeLabel}}{{/if}}</span></button>{{/each}}{{else}}<p>No unequipped magic items.</p>{{/if}}
+            </div>
+          </div>
+        </div>
+        <div class="stat-block item-list-block">
+          <h3>Ammunition and Consumables</h3>
+          <div class="consumable-item-tabs">
+            <button type="button" class="consumable-item-tab {{#if (eq activeConsumableItemTab "ammunition")}}active{{/if}}" data-consumable-category="ammunition">Ammunition</button>
+            <button type="button" class="consumable-item-tab {{#if (eq activeConsumableItemTab "consumable")}}active{{/if}}" data-consumable-category="consumable">Consumables</button>
+          </div>
+          <div class="consumable-item-panels">
+            <section class="consumable-item-panel {{#if (eq activeConsumableItemTab "ammunition")}}active{{/if}}" data-consumable-category-panel="ammunition">
+              {{#if ammunitionGearItems.length}}
+                {{#each ammunitionGearItems as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>{{item.actionTypeLabel}}</span></button>{{/each}}
+              {{else}}<p>No ammunition.</p>{{/if}}
+            </section>
+            <section class="consumable-item-panel {{#if (eq activeConsumableItemTab "consumable")}}active{{/if}}" data-consumable-category-panel="consumable">
+              {{#if consumableGearItems.length}}
+                {{#each consumableGearItems as |item|}}<button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>{{item.actionTypeLabel}}</span></button>{{/each}}
+              {{else}}<p>No consumables.</p>{{/if}}
+            </section>
+          </div>
+        </div>
+        <div class="stat-block item-list-block">
+          <h3>Misc.</h3>
+          {{#if miscGearItems.length}}
+            {{#each miscGearItems as |item|}}
+              <button type="button" class="item-list-entry" data-item-id="{{item.id}}"><span>{{item.name}}</span><span>{{item.category}} · {{item.actionTypeLabel}}</span></button>
+            {{/each}}
+          {{else}}
+            <p>No misc items.</p>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="notes">
+      <details class="stat-block biography-notes-block notes-collapsible-block" open>
+        <summary><h3>Biography / Notes</h3></summary>
+        <div class="biography-notes-columns">
+          <section>
+            <h3>Biography</h3>
+            <textarea name="system.biography">{{system.biography}}</textarea>
+          </section>
+          <section>
+            <h3>Notes</h3>
+            <textarea name="system.notes">{{system.notes}}</textarea>
+          </section>
+        </div>
+      </details>
+      {{#if isCharacter}}
+      <details class="stat-block fields-of-study-block notes-collapsible-block" open>
+        <summary><h3>Fields of Study</h3></summary>
+        <div class="fields-of-study-list">
+          {{#if fieldsOfStudy.length}}
+            {{#each fieldsOfStudy as |field|}}
+              <label class="field-of-study-row">
+                <input name="system.fieldsOfStudy.{{field.key}}.name" type="text" value="{{field.name}}" placeholder="Field of Study" {{#unless ../isEditMode}}disabled{{/unless}} />
+                <input name="system.fieldsOfStudy.{{field.key}}.trained" type="checkbox" {{#if field.trained}}checked{{/if}} {{#unless ../isEditMode}}disabled{{/unless}} />
+              </label>
+            {{/each}}
+          {{else}}
+            <p>Increase Observation to unlock Fields of Study.</p>
+          {{/if}}
+        </div>
+      </details>
+      {{/if}}
+      <details class="stat-block languages-block notes-collapsible-block" open>
+        <summary><h3>Languages</h3></summary>
+        <div class="languages-columns">
+          <section>
+            <h4>Common</h4>
+            <label><input name="system.languagesKnown.common" type="checkbox" {{#if system.languagesKnown.common}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Common</label>
+            <label><input name="system.languagesKnown.avian" type="checkbox" {{#if system.languagesKnown.avian}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Avian</label>
+            <label><input name="system.languagesKnown.draconic" type="checkbox" {{#if system.languagesKnown.draconic}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Draconic</label>
+            <label><input name="system.languagesKnown.dwarvish" type="checkbox" {{#if system.languagesKnown.dwarvish}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Dwarvish</label>
+            <label><input name="system.languagesKnown.elvish" type="checkbox" {{#if system.languagesKnown.elvish}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Elvish</label>
+          </section>
+          <section class="languages-column-continuation">
+            <h4 aria-hidden="true">Common</h4>
+            <label><input name="system.languagesKnown.felidari" type="checkbox" {{#if system.languagesKnown.felidari}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Felidari</label>
+            <label><input name="system.languagesKnown.giant" type="checkbox" {{#if system.languagesKnown.giant}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Giant</label>
+            <label><input name="system.languagesKnown.gnome" type="checkbox" {{#if system.languagesKnown.gnome}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Gnome</label>
+            <label><input name="system.languagesKnown.orc" type="checkbox" {{#if system.languagesKnown.orc}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Orc</label>
+            <label><input name="system.languagesKnown.tortun" type="checkbox" {{#if system.languagesKnown.tortun}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Tortun</label>
+          </section>
+          <section>
+            <h4>Uncommon</h4>
+            <label><input name="system.languagesKnown.celestial" type="checkbox" {{#if system.languagesKnown.celestial}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Celestial</label>
+            <label><input name="system.languagesKnown.druidic" type="checkbox" {{#if system.languagesKnown.druidic}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Druidic</label>
+            <label><input name="system.languagesKnown.nyxian" type="checkbox" {{#if system.languagesKnown.nyxian}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Nyxian</label>
+            <label><input name="system.languagesKnown.voidsong" type="checkbox" {{#if system.languagesKnown.voidsong}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Voidsong</label>
+            <label><input name="system.languagesKnown.glacior" type="checkbox" {{#if system.languagesKnown.glacior}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Glacior</label>
+          </section>
+          <section class="languages-column-continuation">
+            <h4 aria-hidden="true">Uncommon</h4>
+            <label><input name="system.languagesKnown.muhdra" type="checkbox" {{#if system.languagesKnown.muhdra}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Muhdra</label>
+            <label><input name="system.languagesKnown.vulkaric" type="checkbox" {{#if system.languagesKnown.vulkaric}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Vulkaric</label>
+            <label><input name="system.languagesKnown.stratu" type="checkbox" {{#if system.languagesKnown.stratu}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Stratu</label>
+            <label><input name="system.languagesKnown.primordial" type="checkbox" {{#if system.languagesKnown.primordial}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Primordial</label>
+            <label><input name="system.languagesKnown.faelori" type="checkbox" {{#if system.languagesKnown.faelori}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /> Faelori</label>
+          </section>
+        </div>
+      </details>
+      <div class="stat-block conditions-block">
+        <h3>Conditions</h3>
+        <div class="condition-apply-row">
+          <select class="condition-select">
+            {{#each conditionOptions as |option|}}
+              <option value="{{option.key}}">{{option.label}}</option>
+            {{/each}}
+          </select>
+          <input class="condition-stacks-input" type="number" value="1" min="1" />
+          <button type="button" class="apply-condition-button">Apply Condition</button>
+        </div>
+        <div class="active-conditions-display">
+          {{#if activeConditions.length}}
+            {{#each activeConditions as |condition|}}
+              <div class="condition-row" data-effect-id="{{condition.effectId}}" title="{{condition.description}}">
+                <img src="{{condition.icon}}" alt="" />
+                <span class="condition-name">{{condition.label}}{{#if condition.stackable}} (x{{condition.stacks}}){{/if}}</span>
+                {{#if condition.stackable}}
+                  <button type="button" class="condition-stack-remove" data-effect-id="{{condition.effectId}}" data-condition-key="{{condition.key}}" title="Remove one stack">-1</button>
+                {{/if}}
+                <button type="button" class="condition-remove" data-effect-id="{{condition.effectId}}" title="Remove condition">Remove</button>
+              </div>
+            {{/each}}
+          {{else}}
+            <p>No active Conditions.</p>
+          {{/if}}
+        </div>
+        <div class="active-effects-columns">
+          <div class="active-effects-display active-effect-drop-zone">
+            <h3>Active Effects</h3>
+            {{#if enabledEffects.length}}
+              {{#each enabledEffects as |effect|}}
+                <div class="active-effect-row" data-effect-id="{{effect.id}}" title="Right-click to remove">
+                  <img src="{{effect.img}}" alt="" />
+                  <span>{{effect.name}}</span>
+                  <span class="active-effect-type">{{effect.typeLabel}}{{#if effect.sourceItemName}}: {{effect.sourceItemName}}{{/if}}</span>
+                  {{#unless effect.sourceItemName}}
+                  <button type="button" class="effect-state-toggle" data-effect-id="{{effect.id}}" title="Deactivate effect">Active</button>
+                  <input class="active-effect-quantity" data-effect-id="{{effect.id}}" type="number" value="{{effect.quantity}}" min="0" aria-label="{{effect.name}} quantity" {{#unless ../isEditMode}}disabled{{/unless}} />
+                  <button type="button" class="remove-active-effect" data-effect-id="{{effect.id}}" title="Remove effect" aria-label="Remove {{effect.name}}" {{#unless ../isEditMode}}disabled{{/unless}}><i class="fas fa-trash"></i></button>
+                  {{/unless}}
+                </div>
+              {{/each}}
+            {{else}}
+              <p>Drag an Active Effect here.</p>
+            {{/if}}
+            <button type="button" class="create-active-effect" data-effect-disabled="false" {{#unless isEditMode}}disabled{{/unless}}>Create Effect</button>
+          </div>
+          <div class="active-effects-display active-effect-drop-zone">
+            <h3>Inactive Effects</h3>
+            {{#if inactiveEffects.length}}
+              {{#each inactiveEffects as |effect|}}
+                <div class="active-effect-row" data-effect-id="{{effect.id}}" title="Right-click to remove">
+                  <img src="{{effect.img}}" alt="" />
+                  <span>{{effect.name}}</span>
+                  <span class="active-effect-type">{{effect.typeLabel}}{{#if effect.sourceItemName}}: {{effect.sourceItemName}}{{/if}}</span>
+                  {{#unless effect.sourceItemName}}
+                  <button type="button" class="effect-state-toggle" data-effect-id="{{effect.id}}" title="Activate effect">Inactive</button>
+                  <input class="active-effect-quantity" data-effect-id="{{effect.id}}" type="number" value="{{effect.quantity}}" min="0" aria-label="{{effect.name}} quantity" {{#unless ../isEditMode}}disabled{{/unless}} />
+                  <button type="button" class="remove-active-effect" data-effect-id="{{effect.id}}" title="Remove effect" aria-label="Remove {{effect.name}}" {{#unless ../isEditMode}}disabled{{/unless}}><i class="fas fa-trash"></i></button>
+                  {{/unless}}
+                </div>
+              {{/each}}
+            {{else}}
+              <p>No inactive effects.</p>
+            {{/if}}
+            <button type="button" class="create-active-effect" data-effect-disabled="true" {{#unless isEditMode}}disabled{{/unless}}>Create Effect</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</form>

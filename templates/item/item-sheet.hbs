@@ -1,0 +1,791 @@
+<form class="d100-system item-sheet {{#unless isEditMode}}read-mode{{/unless}}" autocomplete="off">
+  <header class="sheet-header">
+    <img src="{{item.img}}" data-edit="img" title="{{item.name}}" />
+    <div>
+      <h1><input name="name" type="text" value="{{item.name}}" placeholder="Item Name" {{#unless isEditMode}}disabled{{/unless}} /></h1>
+      <div class="flex-row">
+        <label>Type</label>
+        <input name="type" type="text" value="{{item.type}}" readonly />
+      </div>
+    </div>
+    {{#if (or (eq item.type "gear") (eq item.type "weapon") (eq item.type "armor") (eq item.type "profession") (eq item.type "race") (eq item.type "talent") (eq item.type "spell") (eq item.type "trait") (eq item.type "npcAction") (eq item.type "category") (eq item.type "weaponTechnique"))}}
+      <div class="sheet-controls">
+        <label class="edit-toggle">
+          <input type="checkbox" data-edit-toggle {{#if isEditMode}}checked{{/if}} /> Edit Mode
+        </label>
+      </div>
+    {{/if}}
+  </header>
+
+  <section class="sheet-body">
+    <div class="tab active" data-group="primary" data-tab="single">
+      {{#unless isEditMode}}
+        {{#if hasItemSummary}}
+          <div class="item-sheet-summary">
+            {{#each itemSummaryFields as |field|}}
+              <div class="item-sheet-summary-card"><strong>{{field.label}}</strong><span>{{field.value}}</span></div>
+            {{/each}}
+          </div>
+        {{/if}}
+        {{#if system.description}}
+          <section class="item-read-summary-text">
+            <h3>Description</h3>
+            <p>{{system.description}}</p>
+          </section>
+        {{/if}}
+        {{#if system.empowermentDescription}}
+          <section class="item-read-summary-text">
+            <h3>Empowerment</h3>
+            <p>{{system.empowermentDescription}}</p>
+          </section>
+        {{/if}}
+      {{/unless}}
+
+      {{#if (and isEditMode (eq item.type "talent"))}}
+        <div class="talent-detail-fields">
+          <label><span>Skill</span>
+            <select name="system.skill" {{#unless isEditMode}}disabled{{/unless}}>
+              <option value="">None</option>
+              {{#each @root.skillOptions as |skill|}}
+                <option value="{{skill.key}}" {{#if (eq @root.system.skill skill.key)}}selected{{/if}}>{{skill.label}}</option>
+              {{/each}}
+            </select>
+          </label>
+          <label><span>Tier</span>
+            <select name="system.tier" {{#unless isEditMode}}disabled{{/unless}}>
+              <option value="1" {{#if (eq system.tier "1")}}selected{{/if}}>1</option>
+              <option value="2" {{#if (eq system.tier "2")}}selected{{/if}}>2</option>
+              <option value="3" {{#if (eq system.tier "3")}}selected{{/if}}>3</option>
+            </select>
+          </label>
+          <label><span>Uses / Day</span><input name="system.usesPerDay" type="number" value="{{system.usesPerDay}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          <label><span>Action</span><select name="system.actionType">
+            {{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq @root.system.actionType action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}
+          </select></label>
+        </div>
+      {{/if}}
+
+      {{#if (and isEditMode (eq item.type "trait"))}}
+        <div class="profession-detail-fields">
+          <label><span>Trait Point Cost</span><input name="system.traitPointCost" type="number" value="{{system.traitPointCost}}" min="0" /></label>
+        </div>
+      {{/if}}
+
+      {{#if (and isEditMode (eq item.type "npcAction"))}}
+        <div class="talent-detail-fields npc-action-detail-fields">
+          <label><span>Hazard Action</span><input name="system.isHazardAction" type="checkbox" {{#if system.isHazardAction}}checked{{/if}} /></label>
+          {{#if system.isHazardAction}}
+            <label><span>Trigger</span><input name="system.trigger" type="text" value="{{system.trigger}}" placeholder="e.g. When a creature steps within 5ft" /></label>
+          {{else}}
+            <label><span>Action Type</span><select name="system.actionType">
+              {{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq @root.system.actionType action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}
+            </select></label>
+          {{/if}}
+          <label><span>Aura Action</span><input name="system.auraAction" type="checkbox" {{#if system.auraAction}}checked{{/if}} /></label>
+          <label><span>Range</span><input name="system.range" type="number" value="{{system.range}}" min="0" /></label>
+          <label><span>Recharge</span><input name="system.recharge" type="number" value="{{system.recharge}}" min="0" /></label>
+          <label><span>Dice String</span><input name="system.dice" type="text" value="{{system.dice}}" placeholder="1d8" /></label>
+          <label><span>Requires Check</span><input name="system.requiresCheck" type="checkbox" {{#if system.requiresCheck}}checked{{/if}} /></label>
+          <label><span>Effect Type</span><select name="system.effectType">
+            <option value="healing" {{#if (eq system.effectType "healing")}}selected{{/if}}>Healing</option>
+            <option value="bludgeoning" {{#if (eq system.effectType "bludgeoning")}}selected{{/if}}>Bludgeoning Damage</option>
+            <option value="piercing" {{#if (eq system.effectType "piercing")}}selected{{/if}}>Piercing Damage</option>
+            <option value="slashing" {{#if (eq system.effectType "slashing")}}selected{{/if}}>Slashing Damage</option>
+            <option value="acid" {{#if (eq system.effectType "acid")}}selected{{/if}}>Acid Damage</option>
+            <option value="cold" {{#if (eq system.effectType "cold")}}selected{{/if}}>Cold Damage</option>
+            <option value="fire" {{#if (eq system.effectType "fire")}}selected{{/if}}>Fire Damage</option>
+            <option value="force" {{#if (eq system.effectType "force")}}selected{{/if}}>Force Damage</option>
+            <option value="lightning" {{#if (eq system.effectType "lightning")}}selected{{/if}}>Lightning Damage</option>
+            <option value="necrotic" {{#if (eq system.effectType "necrotic")}}selected{{/if}}>Necrotic Damage</option>
+            <option value="poison" {{#if (eq system.effectType "poison")}}selected{{/if}}>Poison Damage</option>
+            <option value="psychic" {{#if (eq system.effectType "psychic")}}selected{{/if}}>Psychic Damage</option>
+            <option value="radiant" {{#if (eq system.effectType "radiant")}}selected{{/if}}>Radiant Damage</option>
+            <option value="thunder" {{#if (eq system.effectType "thunder")}}selected{{/if}}>Thunder Damage</option>
+          </select></label>
+        </div>
+      {{/if}}
+
+      {{#if isEditMode}}
+        {{#unless (or (eq item.type "spell") (eq item.type "gear") (eq item.type "weapon") (eq item.type "armor"))}}
+          <div class="flex-row">
+            <label>Description</label>
+          </div>
+          <textarea name="system.description">{{system.description}}</textarea>
+        {{/unless}}
+      {{/if}}
+
+      {{#if (eq item.type "weaponTechnique")}}
+        <div class="weapon-technique-panel">
+          <label><span>Weapon Skill</span>
+            <select name="system.skill" {{#unless isEditMode}}disabled{{/unless}}>
+              {{#each @root.skillOptions as |skill|}}
+                <option value="{{skill.key}}" {{#if (eq @root.system.skill skill.key)}}selected{{/if}}>{{skill.label}}</option>
+              {{/each}}
+            </select>
+          </label>
+          <label><span>Resource Cost to Begin</span>
+            <input name="system.resourceCostToBegin" type="number" value="{{system.resourceCostToBegin}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
+          </label>
+          {{#each system.stages as |stage stageKey|}}
+            <div class="weapon-technique-stage">
+              <div class="weapon-technique-stage-header">
+                <input class="weapon-technique-stage-name" name="system.stages.{{stageKey}}.name" type="text" value="{{stage.name}}" {{#unless @root.isEditMode}}disabled{{/unless}} />
+                {{#unless (eq stageKey "3")}}
+                  <label class="weapon-technique-advance-cost"><span>Resource Cost to Advance</span>
+                    <input name="system.stages.{{stageKey}}.resourceCostToAdvance" type="number" value="{{stage.resourceCostToAdvance}}" min="0" {{#unless @root.isEditMode}}disabled{{/unless}} />
+                  </label>
+                {{/unless}}
+              </div>
+              <div class="weapon-technique-options">
+                {{#each stage.options as |option optionKey|}}
+                  <div class="weapon-technique-option">
+                    <label><span>Option {{optionKey}} Name</span>
+                      <input name="system.stages.{{stageKey}}.options.{{optionKey}}.name" type="text" value="{{option.name}}" {{#unless @root.isEditMode}}disabled{{/unless}} />
+                    </label>
+                    <label class="weapon-technique-option-description-label"><span>Description</span></label>
+                    <textarea name="system.stages.{{stageKey}}.options.{{optionKey}}.description" {{#unless @root.isEditMode}}disabled{{/unless}}>{{option.description}}</textarea>
+                  </div>
+                {{/each}}
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      {{/if}}
+
+      {{#if (eq item.type "category")}}
+        <div class="category-trait-panel">
+          {{#each categoryTraitBuckets as |bucket|}}
+            <div class="category-trait-displayer">
+              <h3>{{bucket.label}}</h3>
+              <div class="category-trait-drop-zone" data-drop-area="category-trait" data-bucket-key="{{bucket.key}}">
+                {{#if bucket.entries.length}}
+                  {{#each bucket.entries as |entry|}}
+                    <div class="category-trait-row" data-bucket-key="{{bucket.key}}" data-entry-uuid="{{entry.uuid}}" title="{{#if @root.isEditMode}}Right-click to remove{{/if}}">
+                      <button type="button" class="category-trait-open" data-entry-uuid="{{entry.uuid}}">{{entry.name}}</button>
+                    </div>
+                  {{/each}}
+                {{else}}
+                  <p class="category-trait-empty">Drag Trait items here.</p>
+                {{/if}}
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      {{/if}}
+
+      {{#if (and isEditMode (or (eq item.type "trait") (eq item.type "npcAction")))}}
+        <div class="item-area-editor">
+          <label><span>Placeable Area</span><input name="system.areaOfEffect" type="checkbox" {{#if system.areaOfEffect}}checked{{/if}} /></label>
+          {{#if system.areaOfEffect}}
+            <div class="magic-item-area-fields">
+              <label><span>Shape</span><select name="system.areaShape"><option value="cone" {{#if (eq system.areaShape "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq system.areaShape "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq system.areaShape "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq system.areaShape "radius")}}selected{{/if}}>Radius</option></select></label>
+              <label><span>Area Color</span><input name="system.areaColor" type="color" value="{{system.areaColor}}" /></label>
+              <label><span>Area Size</span><input name="system.areaSize" type="number" value="{{system.areaSize}}" min="1" /></label>
+            </div>
+            {{#if (eq system.areaShape "ray")}}
+              <div class="magic-item-area-fields">
+                <label><span>Ray Length</span><input name="system.areaRayLength" type="number" value="{{system.areaRayLength}}" min="1" /></label>
+                <label><span>Ray Width</span><input name="system.areaRayWidth" type="number" value="{{system.areaRayWidth}}" min="1" /></label>
+              </div>
+            {{/if}}
+          {{/if}}
+        </div>
+      {{/if}}
+
+      {{#if isEditMode}}
+        {{#if (eq item.type "talent")}}
+          <div class="item-area-editor">
+            <label><span>Placeable Area</span><input name="system.areaOfEffect" type="checkbox" {{#if system.areaOfEffect}}checked{{/if}} /></label>
+            {{#if system.areaOfEffect}}
+              <div class="magic-item-area-fields">
+                <label><span>Shape</span><select name="system.areaShape"><option value="cone" {{#if (eq system.areaShape "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq system.areaShape "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq system.areaShape "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq system.areaShape "radius")}}selected{{/if}}>Radius</option></select></label>
+                <label><span>Area Color</span><input name="system.areaColor" type="color" value="{{system.areaColor}}" /></label>
+                <label><span>Area Size</span><input name="system.areaSize" type="number" value="{{system.areaSize}}" min="1" /></label>
+              </div>
+              {{#if (eq system.areaShape "ray")}}
+                <div class="magic-item-area-fields">
+                  <label><span>Ray Length</span><input name="system.areaRayLength" type="number" value="{{system.areaRayLength}}" min="1" /></label>
+                  <label><span>Ray Width</span><input name="system.areaRayWidth" type="number" value="{{system.areaRayWidth}}" min="1" /></label>
+                </div>
+              {{/if}}
+            {{/if}}
+          </div>
+        {{/if}}
+      {{/if}}
+
+      {{#if (and isEditMode (eq item.type "armor"))}}
+        <div class="armor-sheet-page active">
+          <div class="currency-fields">
+            <label><span>Gold</span><input name="system.gold" type="number" value="{{system.gold}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Silver</span><input name="system.silver" type="number" value="{{system.silver}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Copper</span><input name="system.copper" type="number" value="{{system.copper}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          </div>
+          <div class="armor-details-fields">
+            <label><span>Type</span><select name="system.armorType" {{#unless isEditMode}}disabled{{/unless}}><option value="armor" {{#if (eq system.armorType "armor")}}selected{{/if}}>Armor</option><option value="shield" {{#if (eq system.armorType "shield")}}selected{{/if}}>Shield</option></select></label>
+            <label><span>Tier</span><select name="system.tier" {{#unless isEditMode}}disabled{{/unless}}><option value="0" {{#if (eq system.tier "0")}}selected{{/if}}>0</option><option value="1" {{#if (eq system.tier "1")}}selected{{/if}}>1</option><option value="2" {{#if (eq system.tier "2")}}selected{{/if}}>2</option><option value="3" {{#if (eq system.tier "3")}}selected{{/if}}>3</option><option value="4" {{#if (eq system.tier "4")}}selected{{/if}}>4</option></select></label>
+            <label><span>Defense Score</span><input name="system.defense" type="number" value="{{system.defense}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Break Points</span><input name="system.breakPoints" type="number" value="{{system.breakPoints}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          </div>
+          <details class="armor-resistance-editor">
+            <summary>Resistances Gained</summary>
+            <div class="armor-resistance-grid">
+              {{#each resistanceOptions as |resistance|}}
+                <label><span>{{resistance.label}}</span><input name="system.resistances.{{resistance.value}}" type="number" value="{{lookup @root.system.resistances resistance.value}}" min="0" {{#unless @root.isEditMode}}disabled{{/unless}} /></label>
+              {{/each}}
+            </div>
+          </details>
+          <div class="flex-row"><label>Description</label></div>
+          <textarea name="system.description" {{#unless isEditMode}}disabled{{/unless}}>{{system.description}}</textarea>
+        </div>
+        <div class="armor-sheet-page active">
+          <h3>Active Resistance Effects</h3>
+          {{#if armorResistanceEffects.length}}
+            {{#each armorResistanceEffects as |effect|}}<div class="armor-effect-row"><span>{{effect.label}}</span><strong>+{{effect.value}}</strong></div>{{/each}}
+          {{else}}
+            <p>No active resistance effects.</p>
+          {{/if}}
+        </div>
+      {{/if}}
+
+      {{#if (and isEditMode (eq item.type "spell"))}}
+        <div class="flex-row">
+          <label>Tier</label>
+          <select name="system.tier" {{#unless isEditMode}}disabled{{/unless}}>
+            <option value="0" {{#if (eq system.tier "0")}}selected{{/if}}>0</option>
+            <option value="1" {{#if (eq system.tier "1")}}selected{{/if}}>1</option>
+            <option value="2" {{#if (eq system.tier "2")}}selected{{/if}}>2</option>
+            <option value="3" {{#if (eq system.tier "3")}}selected{{/if}}>3</option>
+          </select>
+        </div>
+        <div class="flex-row">
+          <label>Magic Skill</label>
+          <select name="system.magicSkill" {{#unless isEditMode}}disabled{{/unless}}>
+            <option value="">None</option>
+            {{#each @root.skillOptions as |skill|}}
+              {{#if (or (eq skill.key "cosmic_magic") (eq skill.key "druidic_magic") (eq skill.key "elemental_magic") (eq skill.key "light_magic") (eq skill.key "shadow_magic"))}}
+                <option value="{{skill.key}}" {{#if (eq @root.system.magicSkill skill.key)}}selected{{/if}}>{{skill.label}}</option>
+              {{/if}}
+            {{/each}}
+          </select>
+        </div>
+        <div class="flex-row">
+          <label>Action</label>
+          <select name="system.actionType">
+            {{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq @root.system.actionType action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}
+          </select>
+        </div>
+        <div class="flex-row">
+          <label>Resource Cost</label>
+          <input name="system.resourceCost" type="number" value="{{system.resourceCost}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
+        </div>
+        <div class="flex-row">
+          <div class="flex-row" style="gap: 10px; flex: 1;">
+            <label>Empowerment Cost</label>
+            <input name="system.empowermentCost" type="number" value="{{system.empowermentCost}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
+          </div>
+          <div class="flex-row" style="gap: 10px; flex: 1;">
+            <label>Empowerment Dice</label>
+            <input name="system.empowermentDice" type="text" value="{{system.empowermentDice}}" placeholder="1d6" {{#unless isEditMode}}disabled{{/unless}} />
+          </div>
+        </div>
+        <div class="spell-dice-fields">
+          <label><span>Dice Value</span><input name="system.damageHealing" type="text" value="{{system.damageHealing}}" placeholder="1d8" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          <label><span>Effect Type</span><select name="system.damageType" {{#unless isEditMode}}disabled{{/unless}}>
+            <option value="healing" {{#if (eq system.damageType "healing")}}selected{{/if}}>Healing</option>
+            <option value="bludgeoning" {{#if (eq system.damageType "bludgeoning")}}selected{{/if}}>Bludgeoning Damage</option>
+            <option value="piercing" {{#if (eq system.damageType "piercing")}}selected{{/if}}>Piercing Damage</option>
+            <option value="slashing" {{#if (eq system.damageType "slashing")}}selected{{/if}}>Slashing Damage</option>
+            <option value="acid" {{#if (eq system.damageType "acid")}}selected{{/if}}>Acid Damage</option>
+            <option value="cold" {{#if (eq system.damageType "cold")}}selected{{/if}}>Cold Damage</option>
+            <option value="fire" {{#if (eq system.damageType "fire")}}selected{{/if}}>Fire Damage</option>
+            <option value="force" {{#if (eq system.damageType "force")}}selected{{/if}}>Force Damage</option>
+            <option value="lightning" {{#if (eq system.damageType "lightning")}}selected{{/if}}>Lightning Damage</option>
+            <option value="necrotic" {{#if (eq system.damageType "necrotic")}}selected{{/if}}>Necrotic Damage</option>
+            <option value="poison" {{#if (eq system.damageType "poison")}}selected{{/if}}>Poison Damage</option>
+            <option value="psychic" {{#if (eq system.damageType "psychic")}}selected{{/if}}>Psychic Damage</option>
+            <option value="radiant" {{#if (eq system.damageType "radiant")}}selected{{/if}}>Radiant Damage</option>
+            <option value="thunder" {{#if (eq system.damageType "thunder")}}selected{{/if}}>Thunder Damage</option>
+          </select></label>
+          {{#if (eq system.damageType "healing")}}
+            <label><span>Add to Healing Tracker</span><input name="system.trackHealing" type="checkbox" {{#if system.trackHealing}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
+          {{/if}}
+          <label><span>Requires Concentration</span><input name="system.concentration" type="checkbox" {{#if system.concentration}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
+        </div>
+        <div class="flex-row">
+          <label>Range in Squares</label>
+          <input name="system.range" type="number" value="{{system.range}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
+        </div>
+      {{else}}
+        {{#if isEditMode}}
+        {{#unless (or (eq item.type "profession") (eq item.type "race") (eq item.type "talent") (eq item.type "weapon") (eq item.type "armor") (eq item.type "trait") (eq item.type "npcAction") (eq item.type "category") (eq item.type "weaponTechnique"))}}
+          {{#if (eq item.type "gear")}}
+            <div class="currency-fields">
+              <label><span>Gold</span><input name="system.gold" type="number" value="{{system.gold}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              <label><span>Silver</span><input name="system.silver" type="number" value="{{system.silver}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              <label><span>Copper</span><input name="system.copper" type="number" value="{{system.copper}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            </div>
+            <div class="currency-fields">
+              <label><span>Category</span><select name="system.category" {{#unless isEditMode}}disabled{{/unless}}><option value="consumable" {{#if (eq system.category "consumable")}}selected{{/if}}>Consumable</option><option value="tool" {{#if (eq system.category "tool")}}selected{{/if}}>Tool</option><option value="magic_item" {{#if (eq system.category "magic_item")}}selected{{/if}}>Magic Item</option><option value="misc" {{#if (eq system.category "misc")}}selected{{/if}}>Misc</option></select></label>
+              <label><span>Tier</span><select name="system.tier" {{#unless isEditMode}}disabled{{/unless}}><option value="0" {{#if (eq system.tier "0")}}selected{{/if}}>0</option><option value="1" {{#if (eq system.tier "1")}}selected{{/if}}>1</option><option value="2" {{#if (eq system.tier "2")}}selected{{/if}}>2</option><option value="3" {{#if (eq system.tier "3")}}selected{{/if}}>3</option><option value="4" {{#if (eq system.tier "4")}}selected{{/if}}>4</option></select></label>
+              <label><span>Action</span><select name="system.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq @root.system.actionType action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+            </div>
+            <div class="profession-detail-fields"><label><span>Quantity</span><input name="system.quantity" type="number" value="{{system.quantity}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label></div>
+          {{else}}
+            <div class="flex-row"><label>Cost</label><input name="system.cost" type="number" value="{{system.cost}}" /></div>
+            <div class="flex-row"><label>Quantity</label><input name="system.quantity" type="number" value="{{system.quantity}}" /></div>
+          {{/if}}
+          {{#if (eq item.type "gear")}}
+          {{else}}
+            <div class="flex-row"><label>Attribute</label><input name="system.attribute" type="text" value="{{system.attribute}}" /></div>
+          {{/if}}
+        {{/unless}}
+        {{/if}}
+
+        {{#if (and isEditMode (eq item.type "gear"))}}
+          {{#if (eq system.category "consumable")}}
+            <div class="consumable-fields">
+              <label><span>Ammunition</span><input name="system.ammunition" type="checkbox" {{#if system.ammunition}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
+              <label><span>Dice Value</span><input name="system.consumableDice" type="text" value="{{system.consumableDice}}" placeholder="1d6" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              <label><span>Effect</span><select name="system.consumableEffect" {{#unless isEditMode}}disabled{{/unless}}><option value="damage" {{#if (eq system.consumableEffect "damage")}}selected{{/if}}>Damage</option><option value="healing" {{#if (eq system.consumableEffect "healing")}}selected{{/if}}>Healing</option></select></label>
+            {{#if (eq system.consumableEffect "damage")}}
+              <label><span>Damage Type</span><select name="system.damageType" {{#unless isEditMode}}disabled{{/unless}}>
+                  <option value="bludgeoning" {{#if (eq system.damageType "bludgeoning")}}selected{{/if}}>Bludgeoning</option>
+                  <option value="piercing" {{#if (eq system.damageType "piercing")}}selected{{/if}}>Piercing</option>
+                  <option value="slashing" {{#if (eq system.damageType "slashing")}}selected{{/if}}>Slashing</option>
+                  <option value="acid" {{#if (eq system.damageType "acid")}}selected{{/if}}>Acid</option>
+                  <option value="cold" {{#if (eq system.damageType "cold")}}selected{{/if}}>Cold</option>
+                  <option value="fire" {{#if (eq system.damageType "fire")}}selected{{/if}}>Fire</option>
+                  <option value="force" {{#if (eq system.damageType "force")}}selected{{/if}}>Force</option>
+                  <option value="lightning" {{#if (eq system.damageType "lightning")}}selected{{/if}}>Lightning</option>
+                  <option value="necrotic" {{#if (eq system.damageType "necrotic")}}selected{{/if}}>Necrotic</option>
+                  <option value="poison" {{#if (eq system.damageType "poison")}}selected{{/if}}>Poison</option>
+                  <option value="psychic" {{#if (eq system.damageType "psychic")}}selected{{/if}}>Psychic</option>
+                  <option value="radiant" {{#if (eq system.damageType "radiant")}}selected{{/if}}>Radiant</option>
+                  <option value="thunder" {{#if (eq system.damageType "thunder")}}selected{{/if}}>Thunder</option>
+                </select></label>
+            {{else}}
+              <span class="consumable-field-placeholder"></span>
+            {{/if}}
+            </div>
+            <div class="magic-item-dice-area">
+              <label><span>Area of Effect</span><input name="system.areaOfEffect" type="checkbox" {{#if system.areaOfEffect}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
+            </div>
+            {{#if system.areaOfEffect}}
+              <div class="magic-item-area-fields">
+                <label><span>Shape</span><select name="system.areaShape" {{#unless isEditMode}}disabled{{/unless}}><option value="cone" {{#if (eq system.areaShape "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq system.areaShape "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq system.areaShape "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq system.areaShape "radius")}}selected{{/if}}>Radius</option></select></label>
+                <label><span>Area Color</span><input name="system.areaColor" type="color" value="{{system.areaColor}}" {{#unless isEditMode}}disabled{{/unless}} /></label>
+                <label><span>Area Size</span><input name="system.areaSize" type="number" value="{{system.areaSize}}" min="1" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              </div>
+              {{#if (eq system.areaShape "ray")}}
+                <div class="magic-item-area-fields">
+                  <label><span>Ray Length</span><input name="system.areaRayLength" type="number" value="{{system.areaRayLength}}" min="1" {{#unless isEditMode}}disabled{{/unless}} /></label>
+                  <label><span>Ray Width</span><input name="system.areaRayWidth" type="number" value="{{system.areaRayWidth}}" min="1" {{#unless isEditMode}}disabled{{/unless}} /></label>
+                </div>
+              {{/if}}
+            {{/if}}
+          {{/if}}
+        {{/if}}
+
+        {{#if (and isEditMode (eq item.type "weapon"))}}
+          <div class="currency-fields">
+            <label><span>Gold</span><input name="system.gold" type="number" value="{{system.gold}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Silver</span><input name="system.silver" type="number" value="{{system.silver}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Copper</span><input name="system.copper" type="number" value="{{system.copper}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          </div>
+          <div class="weapon-details-fields">
+            <label><span>Weapon Skill</span><select name="system.skill" {{#unless isEditMode}}disabled{{/unless}}><option value="heavy_weapons" {{#if (eq system.skill "heavy_weapons")}}selected{{/if}}>Heavy Weapons</option><option value="light_weapons" {{#if (eq system.skill "light_weapons")}}selected{{/if}}>Light Weapons</option><option value="ranged_weapons" {{#if (eq system.skill "ranged_weapons")}}selected{{/if}}>Ranged Weapons</option><option value="special_weapons" {{#if (eq system.skill "special_weapons")}}selected{{/if}}>Special Weapons</option></select></label>
+            <label><span>Tier</span><select name="system.tier" {{#unless isEditMode}}disabled{{/unless}}><option value="0" {{#if (eq system.tier "0")}}selected{{/if}}>0</option><option value="1" {{#if (eq system.tier "1")}}selected{{/if}}>1</option><option value="2" {{#if (eq system.tier "2")}}selected{{/if}}>2</option><option value="3" {{#if (eq system.tier "3")}}selected{{/if}}>3</option><option value="4" {{#if (eq system.tier "4")}}selected{{/if}}>4</option></select></label>
+            <label><span>Range</span><input name="system.range" type="number" value="{{system.range}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          </div>
+          <div class="weapon-combat-fields">
+            <label><span>Break Points</span><input name="system.breakPoints" type="number" value="{{system.breakPoints}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Dice Value</span><input name="system.damageDice" type="text" value="{{system.damageDice}}" placeholder="1d6" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Damage Type</span><select name="system.damageType" {{#unless isEditMode}}disabled{{/unless}}>
+              <option value="bludgeoning" {{#if (eq system.damageType "bludgeoning")}}selected{{/if}}>Bludgeoning</option>
+              <option value="piercing" {{#if (eq system.damageType "piercing")}}selected{{/if}}>Piercing</option>
+              <option value="slashing" {{#if (eq system.damageType "slashing")}}selected{{/if}}>Slashing</option>
+              <option value="acid" {{#if (eq system.damageType "acid")}}selected{{/if}}>Acid</option>
+              <option value="cold" {{#if (eq system.damageType "cold")}}selected{{/if}}>Cold</option>
+              <option value="fire" {{#if (eq system.damageType "fire")}}selected{{/if}}>Fire</option>
+              <option value="force" {{#if (eq system.damageType "force")}}selected{{/if}}>Force</option>
+              <option value="lightning" {{#if (eq system.damageType "lightning")}}selected{{/if}}>Lightning</option>
+              <option value="necrotic" {{#if (eq system.damageType "necrotic")}}selected{{/if}}>Necrotic</option>
+              <option value="poison" {{#if (eq system.damageType "poison")}}selected{{/if}}>Poison</option>
+              <option value="psychic" {{#if (eq system.damageType "psychic")}}selected{{/if}}>Psychic</option>
+              <option value="radiant" {{#if (eq system.damageType "radiant")}}selected{{/if}}>Radiant</option>
+              <option value="thunder" {{#if (eq system.damageType "thunder")}}selected{{/if}}>Thunder</option>
+            </select></label>
+          </div>
+          <div class="flex-row">
+            <label>Description</label>
+          </div>
+          <textarea name="system.description" {{#unless isEditMode}}disabled{{/unless}}>{{system.description}}</textarea>
+          <div class="item-area-editor">
+            <label><span>Placeable Area</span><input name="system.areaOfEffect" type="checkbox" {{#if system.areaOfEffect}}checked{{/if}} /></label>
+            {{#if system.areaOfEffect}}
+              <div class="magic-item-area-fields">
+                <label><span>Shape</span><select name="system.areaShape"><option value="cone" {{#if (eq system.areaShape "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq system.areaShape "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq system.areaShape "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq system.areaShape "radius")}}selected{{/if}}>Radius</option></select></label>
+                <label><span>Area Color</span><input name="system.areaColor" type="color" value="{{system.areaColor}}" /></label>
+                <label><span>Area Size</span><input name="system.areaSize" type="number" value="{{system.areaSize}}" min="1" /></label>
+              </div>
+              {{#if (eq system.areaShape "ray")}}
+                <div class="magic-item-area-fields">
+                  <label><span>Ray Length</span><input name="system.areaRayLength" type="number" value="{{system.areaRayLength}}" min="1" /></label>
+                  <label><span>Ray Width</span><input name="system.areaRayWidth" type="number" value="{{system.areaRayWidth}}" min="1" /></label>
+                </div>
+              {{/if}}
+            {{/if}}
+          </div>
+        {{/if}}
+
+        {{#if (and isEditMode (and (eq item.type "gear") (or (eq system.category "armor") (eq system.category "shield"))))}}
+          <div class="flex-row">
+            <label>Defense Score</label>
+            <input name="system.defense" type="number" value="{{system.defense}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
+          </div>
+          <div class="flex-row">
+            <label>Equipped</label>
+            <input name="system.equipped" type="checkbox" {{#if system.equipped}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} />
+          </div>
+        {{/if}}
+
+        {{#if (and isEditMode (and (eq item.type "gear") (eq system.category "magic_item")))}}
+          <div class="magic-item-fields">
+            <label><span>Range</span><input name="system.range" type="text" value="{{system.range}}" placeholder="Touch" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Effect</span><select name="system.magicItemEffect" {{#unless isEditMode}}disabled{{/unless}}><option value="none" {{#if (eq system.magicItemEffect "none")}}selected{{/if}}>None</option><option value="damage" {{#if (eq system.magicItemEffect "damage")}}selected{{/if}}>Damage</option><option value="healing" {{#if (eq system.magicItemEffect "healing")}}selected{{/if}}>Healing</option></select></label>
+            <label><span>Damage Type</span><select name="system.damageType" {{#unless isEditMode}}disabled{{/unless}}><option value="bludgeoning" {{#if (eq system.damageType "bludgeoning")}}selected{{/if}}>Bludgeoning</option><option value="piercing" {{#if (eq system.damageType "piercing")}}selected{{/if}}>Piercing</option><option value="slashing" {{#if (eq system.damageType "slashing")}}selected{{/if}}>Slashing</option><option value="acid" {{#if (eq system.damageType "acid")}}selected{{/if}}>Acid</option><option value="cold" {{#if (eq system.damageType "cold")}}selected{{/if}}>Cold</option><option value="fire" {{#if (eq system.damageType "fire")}}selected{{/if}}>Fire</option><option value="force" {{#if (eq system.damageType "force")}}selected{{/if}}>Force</option><option value="lightning" {{#if (eq system.damageType "lightning")}}selected{{/if}}>Lightning</option><option value="necrotic" {{#if (eq system.damageType "necrotic")}}selected{{/if}}>Necrotic</option><option value="poison" {{#if (eq system.damageType "poison")}}selected{{/if}}>Poison</option><option value="psychic" {{#if (eq system.damageType "psychic")}}selected{{/if}}>Psychic</option><option value="radiant" {{#if (eq system.damageType "radiant")}}selected{{/if}}>Radiant</option><option value="thunder" {{#if (eq system.damageType "thunder")}}selected{{/if}}>Thunder</option></select></label>
+            <label><span>Resource Cost</span><input name="system.resourceCost" type="number" value="{{system.resourceCost}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Break Points</span><input name="system.breakPoints" type="number" value="{{system.breakPoints}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          </div>
+          {{#unless (eq system.magicItemEffect "none")}}
+            <div class="magic-item-dice-area">
+              <label><span>Dice Value</span><input name="system.magicItemDice" type="text" value="{{system.magicItemDice}}" placeholder="1d8" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              <label><span>Area of Effect</span><input name="system.areaOfEffect" type="checkbox" {{#if system.areaOfEffect}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
+            </div>
+          {{/unless}}
+          {{#if system.areaOfEffect}}
+            <div class="magic-item-area-fields">
+              <label><span>Shape</span><select name="system.areaShape" {{#unless isEditMode}}disabled{{/unless}}><option value="cone" {{#if (eq system.areaShape "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq system.areaShape "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq system.areaShape "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq system.areaShape "radius")}}selected{{/if}}>Radius</option></select></label>
+              <label><span>Area Color</span><input name="system.areaColor" type="color" value="{{system.areaColor}}" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              <label><span>Area Size</span><input name="system.areaSize" type="number" value="{{system.areaSize}}" min="1" {{#unless isEditMode}}disabled{{/unless}} /></label>
+            </div>
+            {{#if (eq system.areaShape "ray")}}
+              <div class="magic-item-area-fields">
+                <label><span>Ray Length</span><input name="system.areaRayLength" type="number" value="{{system.areaRayLength}}" min="1" {{#unless isEditMode}}disabled{{/unless}} /></label>
+                <label><span>Ray Width</span><input name="system.areaRayWidth" type="number" value="{{system.areaRayWidth}}" min="1" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              </div>
+            {{/if}}
+          {{/if}}
+        {{/if}}
+        {{#if (eq item.type "profession")}}
+          <div class="profession-detail-fields">
+            <label><span>Resource</span>
+              <select name="system.resource" {{#unless isEditMode}}disabled{{/unless}}>
+                <option value="adrenaline" {{#if (eq system.resource "adrenaline")}}selected{{/if}}>Adrenaline</option>
+                <option value="devotion" {{#if (eq system.resource "devotion")}}selected{{/if}}>Devotion</option>
+                <option value="focus" {{#if (eq system.resource "focus")}}selected{{/if}}>Focus</option>
+                <option value="mana" {{#if (eq system.resource "mana")}}selected{{/if}}>Mana</option>
+              </select>
+            </label>
+            <label><span>Base Health</span><input name="system.baseHealth" type="number" value="{{system.baseHealth}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+          </div>
+          {{#if isEditMode}}
+            <div class="profession-skill-editor">
+              <div class="profession-skill-section">
+                <label>Fixed Skill Grants</label>
+                <div class="profession-skill-grid">
+                  {{#each skillOptions as |skill|}}
+                    <label><input name="system.skillGrants.{{skill.key}}" type="checkbox" {{#if (lookup @root.system.skillGrants skill.key)}}checked{{/if}} /> {{skill.label}}</label>
+                  {{/each}}
+                </div>
+              </div>
+              <div class="profession-skill-section">
+                <div class="profession-skill-choice-title-row">
+                  <label>Player Skill Choices</label>
+                  <button type="button" data-add-profession-skill-choice>Add Choice</button>
+                </div>
+                <div class="profession-skill-choice-list">
+                  {{#each professionSkillChoiceGroups as |group|}}
+                    <details class="profession-skill-choice-block" data-choice-type="profession-skill" data-choice-group-id="{{group.id}}">
+                      <summary>
+                        <span>{{group.label}}</span>
+                        <button type="button" data-remove-profession-skill-choice data-choice-group-id="{{group.id}}">Remove</button>
+                      </summary>
+                      <div class="profession-skill-choice-body">
+                        <label><span>Choice Name</span><input name="system.skillChoiceGroups.{{group.id}}.label" type="text" value="{{group.label}}" /></label>
+                        <div class="profession-skill-grid profession-skill-choice-grid">
+                          {{#each group.skillOptions as |skill|}}
+                            <label><input name="system.skillChoiceGroups.{{../id}}.skills.{{skill.key}}" type="checkbox" {{#if skill.checked}}checked{{/if}} /> {{skill.label}}</label>
+                          {{/each}}
+                        </div>
+                      </div>
+                    </details>
+                  {{else}}
+                    <p class="profession-skill-choice-empty">No player skill choices configured.</p>
+                  {{/each}}
+                </div>
+              </div>
+            </div>
+          {{else}}
+            <div class="profession-skill-summary">
+              {{#each professionFixedSkillGrantLabels as |label|}}
+                <span>{{label}}</span>
+              {{/each}}
+              {{#each professionSkillChoiceLabels as |label|}}
+                <span>{{label}}</span>
+              {{/each}}
+              {{#unless hasProfessionSkillSummary}}
+                <span>No skill grants configured.</span>
+              {{/unless}}
+            </div>
+          {{/if}}
+
+          {{#if isEditMode}}
+            <div class="feature-editor-group profession-feature-editor-group">
+              <label>Profession Features</label>
+              <div class="feature-level-editor profession-feature-level-editor">
+                <label><span>Level 1</span><input name="system.features.1.title" type="text" value="{{lookup (lookup system.features "1") "title"}}" placeholder="Feature Title" /></label>
+                <label><span>Action</span><select name="system.features.1.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "1") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+                <textarea name="system.features.1.text" placeholder="Feature description">{{lookup (lookup system.features "1") "text"}}</textarea>
+                <div class="profession-feature-resource-fields">
+                  <label><span>Resource Gain</span><input name="system.features.1.resourceGain" type="number" value="{{lookup (lookup system.features "1") "resourceGain"}}" min="0" /></label>
+                  <label><span>Resource Loss</span><input name="system.features.1.resourceLoss" type="number" value="{{lookup (lookup system.features "1") "resourceLoss"}}" min="0" /></label>
+                </div>
+                <label><span>Placeable Area</span><input name="system.features.1.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "1") "areaOfEffect")}}checked{{/if}} /></label>
+                {{#if (lookup (lookup system.features "1") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.1.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "1") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "1") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "1") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "1") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.1.areaColor" type="color" value="{{lookup (lookup system.features "1") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.1.areaSize" type="number" value="{{lookup (lookup system.features "1") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "1") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.1.areaRayLength" type="number" value="{{lookup (lookup system.features "1") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.1.areaRayWidth" type="number" value="{{lookup (lookup system.features "1") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+              </div>
+              <div class="feature-level-editor profession-feature-level-editor">
+                <label><span>Level 3</span><input name="system.features.3.title" type="text" value="{{lookup (lookup system.features "3") "title"}}" placeholder="Feature Title" /></label>
+                <label><span>Action</span><select name="system.features.3.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "3") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+                <textarea name="system.features.3.text" placeholder="Feature description">{{lookup (lookup system.features "3") "text"}}</textarea>
+                <div class="profession-feature-resource-fields">
+                  <label><span>Resource Gain</span><input name="system.features.3.resourceGain" type="number" value="{{lookup (lookup system.features "3") "resourceGain"}}" min="0" /></label>
+                  <label><span>Resource Loss</span><input name="system.features.3.resourceLoss" type="number" value="{{lookup (lookup system.features "3") "resourceLoss"}}" min="0" /></label>
+                </div>
+                <label><span>Placeable Area</span><input name="system.features.3.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "3") "areaOfEffect")}}checked{{/if}} /></label>
+                {{#if (lookup (lookup system.features "3") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.3.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "3") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "3") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "3") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "3") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.3.areaColor" type="color" value="{{lookup (lookup system.features "3") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.3.areaSize" type="number" value="{{lookup (lookup system.features "3") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "3") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.3.areaRayLength" type="number" value="{{lookup (lookup system.features "3") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.3.areaRayWidth" type="number" value="{{lookup (lookup system.features "3") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+              </div>
+              <div class="feature-level-editor profession-feature-level-editor">
+                <label><span>Level 5</span><input name="system.features.5.title" type="text" value="{{lookup (lookup system.features "5") "title"}}" placeholder="Feature Title" /></label>
+                <label><span>Action</span><select name="system.features.5.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "5") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+                <textarea name="system.features.5.text" placeholder="Feature description">{{lookup (lookup system.features "5") "text"}}</textarea>
+                <div class="profession-feature-resource-fields">
+                  <label><span>Resource Gain</span><input name="system.features.5.resourceGain" type="number" value="{{lookup (lookup system.features "5") "resourceGain"}}" min="0" /></label>
+                  <label><span>Resource Loss</span><input name="system.features.5.resourceLoss" type="number" value="{{lookup (lookup system.features "5") "resourceLoss"}}" min="0" /></label>
+                </div>
+                <label><span>Placeable Area</span><input name="system.features.5.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "5") "areaOfEffect")}}checked{{/if}} /></label>
+                {{#if (lookup (lookup system.features "5") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.5.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "5") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "5") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "5") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "5") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.5.areaColor" type="color" value="{{lookup (lookup system.features "5") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.5.areaSize" type="number" value="{{lookup (lookup system.features "5") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "5") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.5.areaRayLength" type="number" value="{{lookup (lookup system.features "5") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.5.areaRayWidth" type="number" value="{{lookup (lookup system.features "5") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+              </div>
+              <div class="feature-level-editor profession-feature-level-editor">
+                <label><span>Level 7</span><input name="system.features.7.title" type="text" value="{{lookup (lookup system.features "7") "title"}}" placeholder="Feature Title" /></label>
+                <label><span>Action</span><select name="system.features.7.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "7") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+                <textarea name="system.features.7.text" placeholder="Feature description">{{lookup (lookup system.features "7") "text"}}</textarea>
+                <div class="profession-feature-resource-fields">
+                  <label><span>Resource Gain</span><input name="system.features.7.resourceGain" type="number" value="{{lookup (lookup system.features "7") "resourceGain"}}" min="0" /></label>
+                  <label><span>Resource Loss</span><input name="system.features.7.resourceLoss" type="number" value="{{lookup (lookup system.features "7") "resourceLoss"}}" min="0" /></label>
+                </div>
+                <label><span>Placeable Area</span><input name="system.features.7.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "7") "areaOfEffect")}}checked{{/if}} /></label>
+                {{#if (lookup (lookup system.features "7") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.7.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "7") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "7") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "7") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "7") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.7.areaColor" type="color" value="{{lookup (lookup system.features "7") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.7.areaSize" type="number" value="{{lookup (lookup system.features "7") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "7") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.7.areaRayLength" type="number" value="{{lookup (lookup system.features "7") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.7.areaRayWidth" type="number" value="{{lookup (lookup system.features "7") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+              </div>
+              <div class="feature-level-editor profession-feature-level-editor">
+                <label><span>Level 9</span><input name="system.features.9.title" type="text" value="{{lookup (lookup system.features "9") "title"}}" placeholder="Feature Title" /></label>
+                <label><span>Action</span><select name="system.features.9.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "9") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+                <textarea name="system.features.9.text" placeholder="Feature description">{{lookup (lookup system.features "9") "text"}}</textarea>
+                <div class="profession-feature-resource-fields">
+                  <label><span>Resource Gain</span><input name="system.features.9.resourceGain" type="number" value="{{lookup (lookup system.features "9") "resourceGain"}}" min="0" /></label>
+                  <label><span>Resource Loss</span><input name="system.features.9.resourceLoss" type="number" value="{{lookup (lookup system.features "9") "resourceLoss"}}" min="0" /></label>
+                </div>
+                <label><span>Placeable Area</span><input name="system.features.9.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "9") "areaOfEffect")}}checked{{/if}} /></label>
+                {{#if (lookup (lookup system.features "9") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.9.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "9") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "9") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "9") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "9") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.9.areaColor" type="color" value="{{lookup (lookup system.features "9") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.9.areaSize" type="number" value="{{lookup (lookup system.features "9") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "9") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.9.areaRayLength" type="number" value="{{lookup (lookup system.features "9") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.9.areaRayWidth" type="number" value="{{lookup (lookup system.features "9") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+              </div>
+            </div>
+          {{else}}
+            <div class="profession-feature-summary">
+              {{#each professionFeatureSummaries as |feature|}}
+                <div class="profession-feature-summary-card">
+                  <div class="profession-feature-summary-header">
+                    <strong>Level {{feature.level}}</strong>
+                    <span>{{feature.title}}</span>
+                  </div>
+                  {{#if feature.text}}<p>{{feature.text}}</p>{{/if}}
+                  <div class="profession-feature-summary-resources">
+                    <span>{{feature.actionTypeLabel}}</span>
+                    <span>Gain {{feature.resourceGain}}</span>
+                    <span>Use {{feature.resourceLoss}}</span>
+                    {{#if feature.hasArea}}<span>{{feature.areaLabel}}</span>{{/if}}
+                  </div>
+                </div>
+              {{else}}
+                <div class="profession-feature-summary-card">No profession features configured.</div>
+              {{/each}}
+            </div>
+          {{/if}}
+        {{/if}}
+
+        {{#if (and isEditMode (eq item.type "race"))}}
+          <div class="race-movement-field"><label><span>Movement</span><input name="system.movement" type="number" value="{{system.movement}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label></div>
+          <div class="race-language-editor">
+            <div class="race-language-header">
+              <label>Race Languages</label>
+            </div>
+            <div class="race-language-grid">
+              {{#each languageOptions as |language|}}
+                <label><input name="system.languages.{{language.key}}" type="checkbox" {{#if (lookup @root.system.languages language.key)}}checked{{/if}} {{#unless @root.isEditMode}}disabled{{/unless}} /> {{language.label}}</label>
+              {{/each}}
+            </div>
+          </div>
+          <div class="race-language-editor">
+            <div class="profession-skill-choice-title-row">
+              <label>Player Language Choices</label>
+              <button type="button" data-add-race-language-choice>Add Choice</button>
+            </div>
+            <div class="profession-skill-choice-list">
+              {{#each raceLanguageChoiceGroups as |group|}}
+                <details class="profession-skill-choice-block" data-choice-type="race-language" data-choice-group-id="{{group.id}}">
+                  <summary>
+                    <span>{{group.label}}</span>
+                    <button type="button" data-remove-race-language-choice data-choice-group-id="{{group.id}}">Remove</button>
+                  </summary>
+                  <div class="profession-skill-choice-body">
+                    <label><span>Choice Name</span><input name="system.languageChoiceGroups.{{group.id}}.label" type="text" value="{{group.label}}" /></label>
+                    <label><span>Choice Type</span><select name="system.languageChoiceGroups.{{group.id}}.mode">
+                      <option value="any" {{#if group.isAny}}selected{{/if}}>Any Unknown Language</option>
+                      <option value="specific" {{#if group.isSpecific}}selected{{/if}}>Specific Languages</option>
+                    </select></label>
+                    {{#if group.isSpecific}}
+                      <div class="race-language-grid race-language-choice-grid">
+                        {{#each group.languageOptions as |language|}}
+                          <label><input name="system.languageChoiceGroups.{{../id}}.languages.{{language.key}}" type="checkbox" {{#if language.checked}}checked{{/if}} /> {{language.label}}</label>
+                        {{/each}}
+                      </div>
+                    {{else}}
+                      <p class="profession-skill-choice-empty">Player chooses from any language they do not already know.</p>
+                    {{/if}}
+                  </div>
+                </details>
+              {{else}}
+                <p class="profession-skill-choice-empty">No player language choices configured.</p>
+              {{/each}}
+            </div>
+          </div>
+          <div class="feature-editor-group race-feature-editor-group">
+            <label>Race Features</label>
+            <div class="feature-level-editor race-feature-level-editor">
+              <div class="race-feature-field-row">
+                <label><span>Level 1</span><input name="system.features.1.title" type="text" value="{{lookup (lookup system.features "1") "title"}}" placeholder="Feature Title" {{#unless isEditMode}}disabled{{/unless}} /></label>
+                <label><span>Uses / Day</span><input name="system.features.1.uses" type="number" value="{{lookup (lookup system.features "1") "uses"}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              </div>
+              <label><span>Action</span><select name="system.features.1.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "1") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+              <textarea name="system.features.1.text" placeholder="Feature description" {{#unless isEditMode}}disabled{{/unless}}>{{lookup (lookup system.features "1") "text"}}</textarea>
+              <label><span>Placeable Area</span><input name="system.features.1.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "1") "areaOfEffect")}}checked{{/if}} /></label>
+              {{#if (lookup (lookup system.features "1") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.1.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "1") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "1") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "1") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "1") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.1.areaColor" type="color" value="{{lookup (lookup system.features "1") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.1.areaSize" type="number" value="{{lookup (lookup system.features "1") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "1") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.1.areaRayLength" type="number" value="{{lookup (lookup system.features "1") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.1.areaRayWidth" type="number" value="{{lookup (lookup system.features "1") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+            </div>
+            <div class="feature-level-editor race-feature-level-editor">
+              <div class="race-feature-field-row">
+                <label><span>Level 5</span><input name="system.features.5.title" type="text" value="{{lookup (lookup system.features "5") "title"}}" placeholder="Feature Title" {{#unless isEditMode}}disabled{{/unless}} /></label>
+                <label><span>Uses / Day</span><input name="system.features.5.uses" type="number" value="{{lookup (lookup system.features "5") "uses"}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              </div>
+              <label><span>Action</span><select name="system.features.5.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "5") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+              <textarea name="system.features.5.text" placeholder="Feature description" {{#unless isEditMode}}disabled{{/unless}}>{{lookup (lookup system.features "5") "text"}}</textarea>
+              <label><span>Placeable Area</span><input name="system.features.5.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "5") "areaOfEffect")}}checked{{/if}} /></label>
+              {{#if (lookup (lookup system.features "5") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.5.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "5") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "5") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "5") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "5") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.5.areaColor" type="color" value="{{lookup (lookup system.features "5") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.5.areaSize" type="number" value="{{lookup (lookup system.features "5") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "5") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.5.areaRayLength" type="number" value="{{lookup (lookup system.features "5") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.5.areaRayWidth" type="number" value="{{lookup (lookup system.features "5") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+            </div>
+            <div class="feature-level-editor race-feature-level-editor">
+              <div class="race-feature-field-row">
+                <label><span>Level 10</span><input name="system.features.10.title" type="text" value="{{lookup (lookup system.features "10") "title"}}" placeholder="Feature Title" {{#unless isEditMode}}disabled{{/unless}} /></label>
+                <label><span>Uses / Day</span><input name="system.features.10.uses" type="number" value="{{lookup (lookup system.features "10") "uses"}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              </div>
+              <label><span>Action</span><select name="system.features.10.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "10") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+              <textarea name="system.features.10.text" placeholder="Feature description" {{#unless isEditMode}}disabled{{/unless}}>{{lookup (lookup system.features "10") "text"}}</textarea>
+              <label><span>Placeable Area</span><input name="system.features.10.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "10") "areaOfEffect")}}checked{{/if}} /></label>
+              {{#if (lookup (lookup system.features "10") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.10.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "10") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "10") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "10") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "10") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.10.areaColor" type="color" value="{{lookup (lookup system.features "10") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.10.areaSize" type="number" value="{{lookup (lookup system.features "10") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "10") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.10.areaRayLength" type="number" value="{{lookup (lookup system.features "10") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.10.areaRayWidth" type="number" value="{{lookup (lookup system.features "10") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+            </div>
+            <div class="feature-level-editor race-feature-level-editor">
+              <div class="race-feature-field-row">
+                <label><span>Level 15</span><input name="system.features.15.title" type="text" value="{{lookup (lookup system.features "15") "title"}}" placeholder="Feature Title" {{#unless isEditMode}}disabled{{/unless}} /></label>
+                <label><span>Uses / Day</span><input name="system.features.15.uses" type="number" value="{{lookup (lookup system.features "15") "uses"}}" min="0" {{#unless isEditMode}}disabled{{/unless}} /></label>
+              </div>
+              <label><span>Action</span><select name="system.features.15.actionType">{{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq (lookup (lookup @root.system.features "15") "actionType") action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}</select></label>
+              <textarea name="system.features.15.text" placeholder="Feature description" {{#unless isEditMode}}disabled{{/unless}}>{{lookup (lookup system.features "15") "text"}}</textarea>
+              <label><span>Placeable Area</span><input name="system.features.15.areaOfEffect" type="checkbox" {{#if (lookup (lookup system.features "15") "areaOfEffect")}}checked{{/if}} /></label>
+              {{#if (lookup (lookup system.features "15") "areaOfEffect")}}<div class="magic-item-area-fields"><label><span>Shape</span><select name="system.features.15.areaShape"><option value="cone" {{#if (eq (lookup (lookup system.features "15") "areaShape") "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq (lookup (lookup system.features "15") "areaShape") "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq (lookup (lookup system.features "15") "areaShape") "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq (lookup (lookup system.features "15") "areaShape") "radius")}}selected{{/if}}>Radius</option></select></label><label><span>Area Color</span><input name="system.features.15.areaColor" type="color" value="{{lookup (lookup system.features "15") "areaColor"}}" /></label><label><span>Area Size</span><input name="system.features.15.areaSize" type="number" value="{{lookup (lookup system.features "15") "areaSize"}}" min="1" /></label></div>{{#if (eq (lookup (lookup system.features "15") "areaShape") "ray")}}<div class="magic-item-area-fields"><label><span>Ray Length</span><input name="system.features.15.areaRayLength" type="number" value="{{lookup (lookup system.features "15") "areaRayLength"}}" min="1" /></label><label><span>Ray Width</span><input name="system.features.15.areaRayWidth" type="number" value="{{lookup (lookup system.features "15") "areaRayWidth"}}" min="1" /></label></div>{{/if}}{{/if}}
+            </div>
+          </div>
+        {{/if}}
+        {{#unless isEditMode}}
+        {{#if (eq item.type "race")}}
+          <div class="profession-feature-summary">
+            {{#each raceFeatureSummaries as |feature|}}
+              <div class="profession-feature-summary-card">
+                <div class="profession-feature-summary-header">
+                  <strong>Level {{feature.level}}</strong>
+                  <span>{{feature.title}}</span>
+                </div>
+                {{#if feature.text}}<p>{{feature.text}}</p>{{/if}}
+                <div class="profession-feature-summary-resources">
+                  <span>{{feature.actionTypeLabel}}</span>
+                  {{#if feature.hasUses}}<span>Uses / Day {{feature.uses}}</span>{{/if}}
+                  {{#if feature.hasArea}}<span>{{feature.areaLabel}}</span>{{/if}}
+                </div>
+              </div>
+            {{else}}
+              <div class="profession-feature-summary-card">No race features configured.</div>
+            {{/each}}
+          </div>
+        {{/if}}
+        {{/unless}}
+      {{/if}}
+
+      {{#if (and isEditMode (or (eq item.type "spell") (eq item.type "gear")))}}
+        <div class="flex-row">
+          <label>Description</label>
+        </div>
+        <textarea name="system.description" {{#unless isEditMode}}disabled{{/unless}}>{{system.description}}</textarea>
+
+        {{#if (eq item.type "spell")}}
+          <div class="flex-row">
+            <label>Empowerment Description</label>
+          </div>
+          <textarea name="system.empowermentDescription" {{#unless isEditMode}}disabled{{/unless}}>{{system.empowermentDescription}}</textarea>
+          <div class="item-area-editor">
+            <label><span>Placeable Area</span><input name="system.areaOfEffect" type="checkbox" {{#if system.areaOfEffect}}checked{{/if}} /></label>
+            {{#if system.areaOfEffect}}
+              <div class="magic-item-area-fields">
+                <label><span>Shape</span><select name="system.areaShape"><option value="cone" {{#if (eq system.areaShape "cone")}}selected{{/if}}>Cone</option><option value="rect" {{#if (eq system.areaShape "rect")}}selected{{/if}}>Circle / Cube</option><option value="ray" {{#if (eq system.areaShape "ray")}}selected{{/if}}>Ray</option><option value="radius" {{#if (eq system.areaShape "radius")}}selected{{/if}}>Radius</option></select></label>
+                <label><span>Area Color</span><input name="system.areaColor" type="color" value="{{system.areaColor}}" /></label>
+                <label><span>Area Size</span><input name="system.areaSize" type="number" value="{{system.areaSize}}" min="1" /></label>
+              </div>
+              {{#if (eq system.areaShape "ray")}}
+                <div class="magic-item-area-fields">
+                  <label><span>Ray Length</span><input name="system.areaRayLength" type="number" value="{{system.areaRayLength}}" min="1" /></label>
+                  <label><span>Ray Width</span><input name="system.areaRayWidth" type="number" value="{{system.areaRayWidth}}" min="1" /></label>
+                </div>
+              {{/if}}
+            {{/if}}
+          </div>
+        {{/if}}
+      {{/if}}
+
+      {{#if (or (eq item.type "armor") (eq item.type "gear") (eq item.type "weapon") (eq item.type "race") (eq item.type "profession") (eq item.type "spell") (eq item.type "talent") (eq item.type "trait") (eq item.type "npcAction"))}}
+        <section class="item-effects-panel active-effects-display active-effect-drop-zone">
+          <h3>Active Effects</h3>
+          {{#if itemEffects.length}}
+            {{#each itemEffects as |effect|}}
+              <div class="active-effect-row" data-effect-id="{{effect.id}}" title="Right-click to remove">
+                <img src="{{effect.img}}" alt="" />
+                <span>{{effect.name}}</span>
+                <span class="active-effect-type">{{effect.typeLabel}}</span>
+                {{#if effect.disabled}}<span class="active-effect-disabled">Disabled</span>{{else}}<span>Active</span>{{/if}}
+                <input class="active-effect-quantity" data-effect-id="{{effect.id}}" type="number" value="{{effect.quantity}}" min="0" aria-label="{{effect.name}} quantity" {{#unless ../isEditMode}}disabled{{/unless}} />
+                <button type="button" class="remove-active-effect" data-effect-id="{{effect.id}}" title="Remove effect" aria-label="Remove {{effect.name}}" {{#unless ../isEditMode}}disabled{{/unless}}><i class="fas fa-trash"></i></button>
+              </div>
+            {{/each}}
+          {{else}}
+            <p>Drag an Active Effect here.</p>
+          {{/if}}
+          <button type="button" class="create-active-effect" {{#unless isEditMode}}disabled{{/unless}}>Create Effect</button>
+        </section>
+      {{/if}}
+    </div>
+  </section>
+</form>

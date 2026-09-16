@@ -1,0 +1,55 @@
+{
+  "id": "d100-system",
+  "title": "D100 System",
+  "description": "A custom d100 tabletop roleplaying system built for Foundry VTT v14.",
+  "version": "0.1.0",
+  "documentTypes": {
+    "Actor": {
+      "character": {},
+      "npc": {},
+      "hazard": {}
+    },
+    "Item": {
+      "gear": {},
+      "weapon": {},
+      "armor": {},
+      "talent": {},
+      "profession": {},
+      "race": {},
+      "trait": {},
+      "npcAction": {},
+      "category": {},
+      "weaponTechnique": {}
+    }
+  },
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14.0.0",
+    "maximum": "14"
+  },
+  "esmodules": [
+    "scripts/system.js"
+  ],
+  "styles": [
+    "styles/system.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "authors": [
+    {
+      "name": "Your Name",
+      "url": "https://your-site.example"
+    }
+  ],
+  "url": "https://github.com/ryanwhistler93-star/Songs-Swords-System",
+  "manifest": "https://github.com/ryanwhistler93-star/Songs-Swords-System/releases/latest/download/system.json",
+  "download": "https://github.com/ryanwhistler93-star/Songs-Swords-System/releases/latest/download/system.zip",
+  "license": "MIT",
+  "readme": "README.md"
+}
+

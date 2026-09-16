@@ -1,0 +1,26 @@
+{
+  "D100System": {
+    "Actor": {
+      "Name": "Name",
+      "Level": "Level",
+      "Experience": "Experience",
+      "Biography": "Biography",
+      "Notes": "Notes"
+    },
+    "Item": {
+      "Gear": "Gear",
+      "Weapon": "Weapon",
+      "Talent": "Talent",
+      "Trait": "Traits",
+      "NPCAction": "NPC Actions"
+    },
+    "Skills": {
+      "Intellect": "Intellect",
+      "Reflex": "Reflex",
+      "Body": "Body",
+      "Will": "Will",
+      "Presence": "Presence",
+      "Initiative": "Initiative"
+    }
+  }
+}
