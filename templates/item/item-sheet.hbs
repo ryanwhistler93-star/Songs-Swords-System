@@ -248,72 +248,75 @@
       {{/if}}
 
       {{#if (and isEditMode (eq item.type "spell"))}}
-        <div class="flex-row">
-          <label>Tier</label>
-          <select name="system.tier" {{#unless isEditMode}}disabled{{/unless}}>
-            <option value="0" {{#if (eq system.tier "0")}}selected{{/if}}>0</option>
-            <option value="1" {{#if (eq system.tier "1")}}selected{{/if}}>1</option>
-            <option value="2" {{#if (eq system.tier "2")}}selected{{/if}}>2</option>
-            <option value="3" {{#if (eq system.tier "3")}}selected{{/if}}>3</option>
-          </select>
+        <div class="talent-detail-fields">
+          <label><span>Tier</span>
+            <select name="system.tier" {{#unless isEditMode}}disabled{{/unless}}>
+              <option value="0" {{#if (eq system.tier "0")}}selected{{/if}}>0</option>
+              <option value="1" {{#if (eq system.tier "1")}}selected{{/if}}>1</option>
+              <option value="2" {{#if (eq system.tier "2")}}selected{{/if}}>2</option>
+              <option value="3" {{#if (eq system.tier "3")}}selected{{/if}}>3</option>
+            </select>
+          </label>
+          <label><span>Magic Skill</span>
+            <select name="system.magicSkill" {{#unless isEditMode}}disabled{{/unless}}>
+              <option value="">None</option>
+              {{#each @root.skillOptions as |skill|}}
+                {{#if (or (eq skill.key "cosmic_magic") (eq skill.key "druidic_magic") (eq skill.key "elemental_magic") (eq skill.key "light_magic") (eq skill.key "shadow_magic"))}}
+                  <option value="{{skill.key}}" {{#if (eq @root.system.magicSkill skill.key)}}selected{{/if}}>{{skill.label}}</option>
+                {{/if}}
+              {{/each}}
+            </select>
+          </label>
+          <label><span>Action</span>
+            <select name="system.actionType">
+              {{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq @root.system.actionType action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}
+            </select>
+          </label>
+          <label><span>Range in Squares</span>
+            <input name="system.range" type="number" value="{{system.range}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
+          </label>
         </div>
-        <div class="flex-row">
-          <label>Magic Skill</label>
-          <select name="system.magicSkill" {{#unless isEditMode}}disabled{{/unless}}>
-            <option value="">None</option>
-            {{#each @root.skillOptions as |skill|}}
-              {{#if (or (eq skill.key "cosmic_magic") (eq skill.key "druidic_magic") (eq skill.key "elemental_magic") (eq skill.key "light_magic") (eq skill.key "shadow_magic"))}}
-                <option value="{{skill.key}}" {{#if (eq @root.system.magicSkill skill.key)}}selected{{/if}}>{{skill.label}}</option>
-              {{/if}}
-            {{/each}}
-          </select>
+        <div class="talent-detail-fields">
+          <label><span>Resource Cost</span>
+            <input name="system.resourceCost" type="number" value="{{system.resourceCost}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
+          </label>
+          <label><span>Dice Value</span>
+            <input name="system.damageHealing" type="text" value="{{system.damageHealing}}" placeholder="1d8" {{#unless isEditMode}}disabled{{/unless}} />
+          </label>
+          <label><span>Effect Type</span>
+            <select name="system.damageType" {{#unless isEditMode}}disabled{{/unless}}>
+              <option value="healing" {{#if (eq system.damageType "healing")}}selected{{/if}}>Healing</option>
+              <option value="bludgeoning" {{#if (eq system.damageType "bludgeoning")}}selected{{/if}}>Bludgeoning Damage</option>
+              <option value="piercing" {{#if (eq system.damageType "piercing")}}selected{{/if}}>Piercing Damage</option>
+              <option value="slashing" {{#if (eq system.damageType "slashing")}}selected{{/if}}>Slashing Damage</option>
+              <option value="acid" {{#if (eq system.damageType "acid")}}selected{{/if}}>Acid Damage</option>
+              <option value="cold" {{#if (eq system.damageType "cold")}}selected{{/if}}>Cold Damage</option>
+              <option value="fire" {{#if (eq system.damageType "fire")}}selected{{/if}}>Fire Damage</option>
+              <option value="force" {{#if (eq system.damageType "force")}}selected{{/if}}>Force Damage</option>
+              <option value="lightning" {{#if (eq system.damageType "lightning")}}selected{{/if}}>Lightning Damage</option>
+              <option value="necrotic" {{#if (eq system.damageType "necrotic")}}selected{{/if}}>Necrotic Damage</option>
+              <option value="poison" {{#if (eq system.damageType "poison")}}selected{{/if}}>Poison Damage</option>
+              <option value="psychic" {{#if (eq system.damageType "psychic")}}selected{{/if}}>Psychic Damage</option>
+              <option value="radiant" {{#if (eq system.damageType "radiant")}}selected{{/if}}>Radiant Damage</option>
+              <option value="thunder" {{#if (eq system.damageType "thunder")}}selected{{/if}}>Thunder Damage</option>
+            </select>
+          </label>
         </div>
-        <div class="flex-row">
-          <label>Action</label>
-          <select name="system.actionType">
-            {{#each actionTypeOptions as |action|}}<option value="{{action.value}}" {{#if (eq @root.system.actionType action.value)}}selected{{/if}}>{{action.label}}</option>{{/each}}
-          </select>
-        </div>
-        <div class="flex-row">
-          <label>Resource Cost</label>
-          <input name="system.resourceCost" type="number" value="{{system.resourceCost}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
-        </div>
-        <div class="flex-row">
-          <div class="flex-row" style="gap: 10px; flex: 1;">
-            <label>Empowerment Cost</label>
+        <div class="talent-detail-fields">
+          <label><span>Empowerment Cost</span>
             <input name="system.empowermentCost" type="number" value="{{system.empowermentCost}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
-          </div>
-          <div class="flex-row" style="gap: 10px; flex: 1;">
-            <label>Empowerment Dice</label>
+          </label>
+          <label><span>Empowerment Dice</span>
             <input name="system.empowermentDice" type="text" value="{{system.empowermentDice}}" placeholder="1d6" {{#unless isEditMode}}disabled{{/unless}} />
-          </div>
-        </div>
-        <div class="spell-dice-fields">
-          <label><span>Dice Value</span><input name="system.damageHealing" type="text" value="{{system.damageHealing}}" placeholder="1d8" {{#unless isEditMode}}disabled{{/unless}} /></label>
-          <label><span>Effect Type</span><select name="system.damageType" {{#unless isEditMode}}disabled{{/unless}}>
-            <option value="healing" {{#if (eq system.damageType "healing")}}selected{{/if}}>Healing</option>
-            <option value="bludgeoning" {{#if (eq system.damageType "bludgeoning")}}selected{{/if}}>Bludgeoning Damage</option>
-            <option value="piercing" {{#if (eq system.damageType "piercing")}}selected{{/if}}>Piercing Damage</option>
-            <option value="slashing" {{#if (eq system.damageType "slashing")}}selected{{/if}}>Slashing Damage</option>
-            <option value="acid" {{#if (eq system.damageType "acid")}}selected{{/if}}>Acid Damage</option>
-            <option value="cold" {{#if (eq system.damageType "cold")}}selected{{/if}}>Cold Damage</option>
-            <option value="fire" {{#if (eq system.damageType "fire")}}selected{{/if}}>Fire Damage</option>
-            <option value="force" {{#if (eq system.damageType "force")}}selected{{/if}}>Force Damage</option>
-            <option value="lightning" {{#if (eq system.damageType "lightning")}}selected{{/if}}>Lightning Damage</option>
-            <option value="necrotic" {{#if (eq system.damageType "necrotic")}}selected{{/if}}>Necrotic Damage</option>
-            <option value="poison" {{#if (eq system.damageType "poison")}}selected{{/if}}>Poison Damage</option>
-            <option value="psychic" {{#if (eq system.damageType "psychic")}}selected{{/if}}>Psychic Damage</option>
-            <option value="radiant" {{#if (eq system.damageType "radiant")}}selected{{/if}}>Radiant Damage</option>
-            <option value="thunder" {{#if (eq system.damageType "thunder")}}selected{{/if}}>Thunder Damage</option>
-          </select></label>
+          </label>
+          <label><span>Requires Concentration</span>
+            <input name="system.concentration" type="checkbox" {{#if system.concentration}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} />
+          </label>
           {{#if (eq system.damageType "healing")}}
-            <label><span>Add to Healing Tracker</span><input name="system.trackHealing" type="checkbox" {{#if system.trackHealing}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
+            <label><span>Add to Healing Tracker</span>
+              <input name="system.trackHealing" type="checkbox" {{#if system.trackHealing}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} />
+            </label>
           {{/if}}
-          <label><span>Requires Concentration</span><input name="system.concentration" type="checkbox" {{#if system.concentration}}checked{{/if}} {{#unless isEditMode}}disabled{{/unless}} /></label>
-        </div>
-        <div class="flex-row">
-          <label>Range in Squares</label>
-          <input name="system.range" type="number" value="{{system.range}}" min="0" {{#unless isEditMode}}disabled{{/unless}} />
         </div>
       {{else}}
         {{#if isEditMode}}

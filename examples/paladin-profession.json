@@ -1,0 +1,72 @@
+{
+  "name": "Paladin",
+  "type": "profession",
+  "system": {
+    "description": "A devout champion who serves a cause, a creed, or a sacred vow.",
+    "cost": 0,
+    "quantity": 1,
+    "resource": "devotion",
+    "baseHealth": 18,
+    "skillBonuses": [
+      {
+        "skill": "athletics",
+        "points": 3
+      },
+      {
+        "skill": "armor",
+        "points": 3
+      },
+      {
+        "skill": "light_weapons",
+        "points": 3
+      }
+    ],
+    "optionalSkillBonuses": false,
+    "bonusChoices": [],
+    "level": 1,
+    "attributes": {
+      "strength": 0,
+      "toughness": 0,
+      "observation": 0,
+      "reflex": 0,
+      "majesty": 0
+    },
+    "skills": {
+      "acrobatics": 0,
+      "alchemy": 0,
+      "athletics": 0,
+      "crafting": 0,
+      "investigation": 0,
+      "knowledge": 0,
+      "languages": 0,
+      "luck": 0,
+      "magecraft": 0,
+      "medicine": 0,
+      "performance": 0,
+      "sleight_of_hand": 0,
+      "speechcraft": 0,
+      "stealth": 0,
+      "survival": 0,
+      "vehicles": 0,
+      "heavy_weapons": 0,
+      "light_weapons": 0,
+      "magic_weapons": 0,
+      "ranged_weapons": 0,
+      "special_weapons": 0,
+      "armor": 0,
+      "evasion": 0,
+      "shields": 0,
+      "cosmic_magic": 0,
+      "druidic_magic": 0,
+      "elemental_magic": 0,
+      "light_magic": 0,
+      "shadow_magic": 0
+    },
+    "health": {
+      "value": 0,
+      "max": 0
+    },
+    "origin": "Sacred Oath",
+    "characterCreation": true
+  }
+}

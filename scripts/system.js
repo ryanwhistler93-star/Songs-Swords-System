@@ -53,7 +53,7 @@ Hooks.once('init', () => {
     },
     dying: {
       key: 'dying', label: 'Dying', icon: 'icons/svg/skull.svg', stackable: false,
-      description: 'Roll a Toughness Save (10 Swords if caused by a Critical Hit) to remain conscious. If struck again at 0 Health, roll for an additional Scar.',
+      description: '',
       autoApplyAtZeroHealth: true
     },
     frightened: {
@@ -212,7 +212,11 @@ Hooks.once('init', () => {
       await game.settings.set('d100-system', 'fate', nextValue);
       await ChatMessage.create({
         speaker: ChatMessage.getSpeaker(),
-        content: `<p><strong>Fate</strong> changed from ${previousValue} to ${nextValue}.</p>`
+        content: buildStatusChatCard({
+          icon: 'icons/magic/holy/prayer-hands-glowing-yellow.webp',
+          title: 'Fate',
+          bodyHtml: `<p>Changed from <strong>${previousValue}</strong> to <strong>${nextValue}</strong>.</p>`
+        })
       });
       renderFateTracker();
     };
@@ -590,7 +594,11 @@ Hooks.once('init', () => {
       await setTrackers(currentTrackers);
       await ChatMessage.create({
         speaker: ChatMessage.getSpeaker(),
-        content: `<p><strong>${tracker.label || 'Tracker'}</strong> changed from ${previousValue} to ${nextValue}.</p>`
+        content: buildStatusChatCard({
+          icon: 'icons/svg/upgrade.svg',
+          title: tracker.label || 'Tracker',
+          bodyHtml: `<p>Changed from <strong>${previousValue}</strong> to <strong>${nextValue}</strong>.</p>`
+        })
       });
     };
 
@@ -823,7 +831,8 @@ Hooks.once('init', () => {
   const parseDiceExpression = (value) => {
     const raw = String(value ?? '').trim();
     if (!raw) return '1d6';
-    if (/^\d+d\d+$/i.test(raw)) return raw.toLowerCase();
+    const cleaned = raw.replace(/\s+/g, '');
+    if (/^\d+d\d+([+-]\d+d\d+|[+-]\d+)*$/i.test(cleaned)) return cleaned.toLowerCase();
     const numericValue = Number(raw) || 1;
     return `${Math.max(1, numericValue)}d6`;
   };
@@ -1226,14 +1235,17 @@ Hooks.once('init', () => {
     if (skillCheck) {
       messageRolls.push(skillCheck.roll);
       skillCheckContent = `
-        <p><strong>${skillCheck.attributeLabel} Check</strong>: TN ${skillCheck.targetNumber} (${skillCheck.attributeValue}×10 + ${skillCheck.attributeValue} + ${skillCheck.songs} Songs - ${skillCheck.swords} Swords)</p>
-        <p>Roll: ${skillCheck.roll.total} — <strong>${skillCheck.degreeInfo.label}</strong></p>
+        <p class="d100-chat-card-breakdown">${skillCheck.attributeLabel} Check: TN ${skillCheck.targetNumber} (${skillCheck.attributeValue}×10 + ${skillCheck.attributeValue} + ${skillCheck.songs} Songs - ${skillCheck.swords} Swords)</p>
+        <div class="d100-chat-card-result outcome-${skillCheck.degreeInfo.type}">
+          <span class="d100-chat-card-roll-total">${skillCheck.roll.total}</span>
+          <span class="d100-chat-card-outcome-label">${skillCheck.degreeInfo.label}</span>
+        </div>
       `;
     }
     if (dice) {
       const roll = await new Roll(parseDiceExpression(dice)).evaluate();
       messageRolls.push(roll);
-      rollContent = `<p><strong>${effectLabel}:</strong> ${roll.total} (${roll.formula})</p>${buildApplyEffectButton(roll.total, effectType)}`;
+      rollContent = `<p class="d100-chat-card-text"><strong>${effectLabel}:</strong> ${roll.total} (${roll.formula})</p>${buildApplyEffectButton(roll.total, effectType)}`;
     }
 
     const recharge = Math.max(0, Math.floor(Number(item.system?.recharge) || 0));
@@ -1247,13 +1259,23 @@ Hooks.once('init', () => {
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor }),
       content: `
-        <p><strong>${actor.name}</strong> ${automaticAura ? 'triggers aura action' : 'uses'} <strong>${item.name}</strong> (${getActionTypeLabel(item.system?.actionType)}).</p>
-        ${skillCheckContent}
-        ${rollContent}
-        ${recharge > 0 ? `<p><strong>Recharge:</strong> 0 / ${recharge}</p>` : ''}
-        ${description ? `<p>${renderChatText(description, actor)}</p>` : ''}
-        ${configuredAreaButton(item.system)}
-        ${itemEffectsChatContent(item, actor)}
+        <div class="d100-chat-card">
+          <div class="d100-chat-card-header">
+            <img src="${actor.img || 'icons/svg/mystery-man.svg'}" alt="${actor.name}" />
+            <div class="d100-chat-card-header-text">
+              <span class="d100-chat-card-title">${item.name}</span>
+              <span class="d100-chat-card-subtitle">${actor.name} · ${automaticAura ? 'Aura Action' : getActionTypeLabel(item.system?.actionType)}</span>
+            </div>
+          </div>
+          <div class="d100-chat-card-body">
+            ${skillCheckContent}
+            ${rollContent}
+            ${recharge > 0 ? `<p class="d100-chat-card-breakdown">Recharge: 0 / ${recharge}</p>` : ''}
+            ${description ? `<p class="d100-chat-card-text">${renderChatText(description, actor)}</p>` : ''}
+            ${configuredAreaButton(item.system)}
+            ${itemEffectsChatContent(item, actor)}
+          </div>
+        </div>
       `,
       rolls: messageRolls
     });
@@ -1273,16 +1295,26 @@ Hooks.once('init', () => {
     if (!actor || !isAutomaticEffectSource(item)) return;
     await normalizeAutomaticItemEffects(item);
 
-    const existingIds = [...actor.effects]
-      .filter((effect) => effect.flags?.['d100-system']?.sourceItemId === item.id || item.type === 'race' && effect.origin === item.uuid)
-      .map((effect) => effect.id);
+    const existing = [...actor.effects]
+      .filter((effect) => effect.flags?.['d100-system']?.sourceItemId === item.id || item.type === 'race' && effect.origin === item.uuid);
+    const disabledStateBySourceEffectId = new Map();
+    for (const effect of existing) {
+      const sourceEffectId = effect.flags?.['d100-system']?.sourceEffectId;
+      if (sourceEffectId) disabledStateBySourceEffectId.set(sourceEffectId, effect.disabled);
+    }
+    const existingIds = existing.map((effect) => effect.id);
     if (existingIds.length) await actor.deleteEmbeddedDocuments('ActiveEffect', existingIds);
 
+    const suppressedIds = new Set(actor.flags?.['d100-system']?.suppressedAutoEffects ?? []);
     const effects = getItemEffects(item)
       .filter((effect) => item.type === 'race' || !effect.transfer)
+      .filter((effect) => !suppressedIds.has(effect.id))
       .map((effect) => {
         const effectData = effect.toObject();
         if (item.type === 'race') effectData.transfer = false;
+        if (disabledStateBySourceEffectId.has(effect.id)) {
+          effectData.disabled = disabledStateBySourceEffectId.get(effect.id);
+        }
         effectData.flags = foundry.utils.mergeObject(effectData.flags ?? {}, {
           'd100-system': {
             sourceItemId: item.id,
@@ -1292,7 +1324,26 @@ Hooks.once('init', () => {
         });
         return effectData;
       });
-    if (effects.length) await actor.createEmbeddedDocuments('ActiveEffect', effects);
+    if (effects.length) await actor.createEmbeddedDocuments('ActiveEffect', effects, { d100SkipAutomaticSync: true });
+
+    // Final safety sweep: Foundry's own native transfer mechanism can independently
+    // materialize a copy of a transfer:true item effect on the actor, separately from
+    // (and potentially racing against) the manual sync above. Collapse any lingering
+    // duplicates for this item down to exactly one per source effect, whether or not
+    // they carry our own tracking flags.
+    const survivors = [...actor.effects]
+      .filter((effect) => effect.flags?.['d100-system']?.sourceItemId === item.id || item.type === 'race' && effect.origin === item.uuid);
+    const seenKeys = new Set();
+    const extraIds = [];
+    for (const effect of survivors) {
+      const key = effect.flags?.['d100-system']?.sourceEffectId ?? `name:${effect.name}`;
+      if (seenKeys.has(key)) {
+        extraIds.push(effect.id);
+      } else {
+        seenKeys.add(key);
+      }
+    }
+    if (extraIds.length) await actor.deleteEmbeddedDocuments('ActiveEffect', extraIds, { d100SkipAutomaticSync: true });
   }
   async function syncAutomaticItemEffects(item) {
     const key = item?.uuid ?? item?.id;
@@ -1637,16 +1688,18 @@ Hooks.once('init', () => {
     for (const def of VITAL_MODIFIER_INDICATOR_DEFS) {
       const modifier = Number(actor.system?.[def.vital]?.modifier) || 0;
       const shouldShow = def.direction === 'positive' ? modifier > 0 : modifier < 0;
-      const existing = actor.effects.find((effect) => effect.flags?.['d100-system']?.vitalIndicator === def.key);
-      if (shouldShow && !existing) {
+      const matches = actor.effects.filter((effect) => effect.flags?.['d100-system']?.vitalIndicator === def.key);
+      if (shouldShow && !matches.length) {
         await actor.createEmbeddedDocuments('ActiveEffect', [{
           name: def.name,
           img: def.img,
           statuses: [def.key],
           flags: { 'd100-system': { vitalIndicator: def.key } }
         }]);
-      } else if (!shouldShow && existing) {
-        await existing.delete();
+      } else if (!shouldShow && matches.length) {
+        await actor.deleteEmbeddedDocuments('ActiveEffect', matches.map((effect) => effect.id));
+      } else if (shouldShow && matches.length > 1) {
+        await actor.deleteEmbeddedDocuments('ActiveEffect', matches.slice(1).map((effect) => effect.id));
       }
     }
   }
@@ -1654,8 +1707,10 @@ Hooks.once('init', () => {
   async function applyConditionToActor(actor, conditionKey, stacksToAdd = 1) {
     const def = CONDITION_DEFS[conditionKey];
     if (!actor || !def) return;
-    const existing = getActorConditionEffects(actor).find((entry) => entry.flags?.['d100-system']?.condition === conditionKey);
-    if (existing) {
+    const matches = getActorConditionEffects(actor).filter((entry) => entry.flags?.['d100-system']?.condition === conditionKey);
+    if (matches.length) {
+      const [existing, ...duplicates] = matches;
+      if (duplicates.length) await actor.deleteEmbeddedDocuments('ActiveEffect', duplicates.map((entry) => entry.id));
       if (!def.stackable) return;
       const newStacks = Math.max(1, (Math.floor(Number(existing.flags?.['d100-system']?.stacks) || 1)) + Math.floor(stacksToAdd));
       await existing.update({ 'flags.d100-system.stacks': newStacks });
@@ -1826,10 +1881,23 @@ Hooks.once('init', () => {
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor }),
       content: `
-        <p><strong>${actor.name}</strong> rolls for a Scar while Dying.</p>
-        <p>Roll: ${roll.total}${modifier ? ` + ${modifier} (${modifierLabels.join(', ')})` : ''} = <strong>${total}</strong></p>
-        <p>${gainsScar ? '<strong>Result of 10+: Gains a Scar.</strong>' : 'No Scar gained.'}</p>
-        ${scarNote}
+        <div class="d100-chat-card">
+          <div class="d100-chat-card-header">
+            <img src="${actor.img || 'icons/svg/mystery-man.svg'}" alt="${actor.name}" />
+            <div class="d100-chat-card-header-text">
+              <span class="d100-chat-card-title">Scar Roll</span>
+              <span class="d100-chat-card-subtitle">${actor.name} · While Dying</span>
+            </div>
+          </div>
+          <div class="d100-chat-card-body">
+            <p class="d100-chat-card-breakdown">Roll: ${roll.total}${modifier ? ` + ${modifier} (${modifierLabels.join(', ')})` : ''} = <strong>${total}</strong> (10+ gains a Scar)</p>
+            <div class="d100-chat-card-result ${gainsScar ? 'outcome-failure' : 'outcome-success'}">
+              <span class="d100-chat-card-roll-total">${total}</span>
+              <span class="d100-chat-card-outcome-label">${gainsScar ? 'Scar Gained' : 'No Scar'}</span>
+            </div>
+            ${scarNote ? `<div class="d100-chat-card-text">${scarNote}</div>` : ''}
+          </div>
+        </div>
       `,
       rolls: [roll]
     });
@@ -1907,13 +1975,14 @@ Hooks.once('init', () => {
 
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor }),
-      content: `
-        <p><strong>${actor.name}</strong> makes a Concentration Check (Toughness + ${skillLabels[skillKey] ?? skillKey}) after taking ${damageAmount} damage.</p>
-        <p>TN: ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)</p>
-        <p>Roll: ${roll.total}</p>
-        <p><strong>${degreeInfo.label}</strong></p>
-        <p>${succeeded ? 'Concentration is maintained.' : '<strong>Concentration is lost.</strong>'}</p>
-      `,
+      content: buildCheckChatCard({
+        actor,
+        title: 'Concentration Check',
+        subtitle: `Toughness + ${skillLabels[skillKey] ?? skillKey}`,
+        breakdown: `After taking ${damageAmount} damage · TN ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)<br>${succeeded ? 'Concentration is maintained.' : '<strong>Concentration is lost.</strong>'}`,
+        roll,
+        degreeInfo
+      }),
       rolls: [roll]
     });
   }
@@ -1941,7 +2010,7 @@ Hooks.once('init', () => {
 
     await actor.update({ 'system.health.value': newValue });
 
-    const triggersScarRoll = !isHealing && finalAmount > 0 && (currentValue <= 0 || newValue <= 0);
+    const triggersScarRoll = !isHealing && finalAmount > 0 && (currentValue <= 0 || newValue <= 0) && actor.type === 'character';
     if (triggersScarRoll && actor.isOwner) {
       await promptScarRoll(actor);
     }
@@ -1995,6 +2064,62 @@ Hooks.once('init', () => {
     };
   }
 
+  function buildCheckChatCard({ actor, title, subtitle, breakdown, roll, degreeInfo, extraBodyHtml }) {
+    const img = actor?.img || 'icons/svg/mystery-man.svg';
+    const name = actor?.name || 'Unknown';
+    return `
+      <div class="d100-chat-card">
+        <div class="d100-chat-card-header">
+          <img src="${img}" alt="${name}" />
+          <div class="d100-chat-card-header-text">
+            <span class="d100-chat-card-title">${title}</span>
+            <span class="d100-chat-card-subtitle">${name}${subtitle ? ` · ${subtitle}` : ''}</span>
+          </div>
+        </div>
+        <div class="d100-chat-card-body">
+          ${breakdown ? `<p class="d100-chat-card-breakdown">${breakdown}</p>` : ''}
+          <div class="d100-chat-card-result outcome-${degreeInfo.type}">
+            <span class="d100-chat-card-roll-total">${roll.total}</span>
+            <span class="d100-chat-card-outcome-label">${degreeInfo.label}</span>
+          </div>
+          ${extraBodyHtml || ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function buildDescriptionChatCard({ actor, title, subtitle, bodyHtml, footerHtml }) {
+    const img = actor?.img || 'icons/svg/mystery-man.svg';
+    const name = actor?.name || 'Unknown';
+    return `
+      <div class="d100-chat-card">
+        <div class="d100-chat-card-header">
+          <img src="${img}" alt="${name}" />
+          <div class="d100-chat-card-header-text">
+            <span class="d100-chat-card-title">${title}</span>
+            ${subtitle || name ? `<span class="d100-chat-card-subtitle">${[name, subtitle].filter(Boolean).join(' · ')}</span>` : ''}
+          </div>
+        </div>
+        ${bodyHtml ? `<div class="d100-chat-card-body"><div class="d100-chat-card-text">${bodyHtml}</div></div>` : ''}
+        ${footerHtml ? `<div class="d100-chat-card-footer">${footerHtml}</div>` : ''}
+      </div>
+    `;
+  }
+
+  function buildStatusChatCard({ icon = 'icons/svg/upgrade.svg', title, bodyHtml }) {
+    return `
+      <div class="d100-chat-card d100-chat-card-status">
+        <div class="d100-chat-card-header">
+          <img src="${icon}" alt="${title}" />
+          <div class="d100-chat-card-header-text">
+            <span class="d100-chat-card-title">${title}</span>
+          </div>
+        </div>
+        <div class="d100-chat-card-body"><div class="d100-chat-card-text">${bodyHtml}</div></div>
+      </div>
+    `;
+  }
+
   async function processStartOfTurnConditions(actor) {
     if (!actor) return;
     for (const { key, def, stacks } of getActorActiveConditions(actor)) {
@@ -2004,7 +2129,12 @@ Hooks.once('init', () => {
         const result = await applyEffectToActor(actor, roll.total, def.dot.damageType);
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor }),
-          content: `<p><strong>${actor.name}</strong> takes <strong>${result.finalAmount}</strong> ${getResistanceTypeLabel(def.dot.damageType)} damage from <strong>${def.label}</strong> (${roll.total} rolled, ${formula}).</p><p>Health: ${result.newValue} / ${result.maxValue}</p>`,
+          content: buildDescriptionChatCard({
+            actor,
+            title: def.label,
+            subtitle: `${roll.total} rolled (${formula})`,
+            bodyHtml: `<p>Takes <strong>${result.finalAmount}</strong> ${getResistanceTypeLabel(def.dot.damageType)} damage.</p><p>Health: ${result.newValue} / ${result.maxValue}</p>`
+          }),
           rolls: [roll]
         });
       }
@@ -2025,7 +2155,12 @@ Hooks.once('init', () => {
       if (!attributeKey) {
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor }),
-          content: `<p><strong>${actor.name}</strong> may attempt a ${saveDef.label ?? 'Save'} to end <strong>${def.label}</strong> (DM adjudicates the roll).</p>`
+          content: buildDescriptionChatCard({
+            actor,
+            title: def.label,
+            subtitle: `${saveDef.label ?? 'Save'} required`,
+            bodyHtml: `<p>May attempt a ${saveDef.label ?? 'Save'} to end this condition (DM adjudicates the roll).</p>`
+          })
         });
         continue;
       }
@@ -2055,11 +2190,14 @@ Hooks.once('init', () => {
 
       await ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor }),
-        content: `
-          <p><strong>${actor.name}</strong> makes an end-of-turn ${attributeLabels[attributeKey] ?? attributeKey} Save against <strong>${def.label}</strong>.</p>
-          <p>TN: ${targetNumber}. Roll: ${roll.total}. <strong>${degreeInfo.label}</strong></p>
-          <p>${succeeded ? 'Success' : 'Failure'} — ${outcomeNote}.</p>
-        `,
+        content: buildCheckChatCard({
+          actor,
+          title: 'End-of-Turn Save',
+          subtitle: `${attributeLabels[attributeKey] ?? attributeKey} vs ${def.label}`,
+          breakdown: `TN ${targetNumber}<br>${succeeded ? 'Success' : 'Failure'} — ${outcomeNote}.`,
+          roll,
+          degreeInfo
+        }),
         rolls: [roll]
       });
     }
@@ -2255,7 +2393,7 @@ Hooks.once('init', () => {
       return foundry.utils.mergeObject(super.defaultOptions, {
         classes: ['d100-system', 'sheet', 'actor'],
         template: 'systems/d100-system/templates/actor/actor-sheet.hbs',
-        width: 720,
+        width: 760,
         height: 760,
         tabs: [{ navSelector: '.sheet-tabs', contentSelector: '.sheet-body', initial: 'summary' }]
       });
@@ -2265,11 +2403,13 @@ Hooks.once('init', () => {
     static MIN_HEIGHT = 760;
 
     setPosition(position = {}) {
-      if (position.width !== undefined) {
-        position.width = position.width === 'auto' ? position.width : Math.max(D100ActorSheet.MIN_WIDTH, Number(position.width) || 0);
+      const requestedWidth = position.width !== undefined ? position.width : this.position?.width;
+      if (requestedWidth !== undefined && requestedWidth !== 'auto') {
+        position.width = Math.max(D100ActorSheet.MIN_WIDTH, Number(requestedWidth) || 0);
       }
-      if (position.height !== undefined) {
-        position.height = position.height === 'auto' ? position.height : Math.max(D100ActorSheet.MIN_HEIGHT, Number(position.height) || 0);
+      const requestedHeight = position.height !== undefined ? position.height : this.position?.height;
+      if (requestedHeight !== undefined && requestedHeight !== 'auto') {
+        position.height = Math.max(D100ActorSheet.MIN_HEIGHT, Number(requestedHeight) || 0);
       }
       return super.setPosition(position);
     }
@@ -2748,6 +2888,19 @@ Hooks.once('init', () => {
         .filter((skill) => skill.favorite);
       context.skillTalentMap = skillTalentMap;
 
+      if (isCharacter) {
+        const characterLevel = Math.max(1, Math.floor(Number(context.actor.system.level) || 1));
+        const isHuman = String(context.actor.system.race ?? '').trim().toLowerCase() === 'human';
+        let skillPointsMax = 21 + (3 * characterLevel);
+        if (isHuman && characterLevel >= 15) {
+          skillPointsMax += 2 * (characterLevel - 14);
+        }
+        const skillPointsUsed = Object.values(skills ?? {}).reduce((sum, value) => sum + (Number(value) || 0), 0);
+        context.skillPointsUsed = skillPointsUsed;
+        context.skillPointsMax = skillPointsMax;
+        context.skillPointsOverBudget = skillPointsUsed > skillPointsMax;
+      }
+
       const weaponItems = [...(context.actor.items ?? [])]
         .filter((item) => isWeaponItem(item) && item.system?.equipped !== false)
         .slice(0, 3)
@@ -2899,20 +3052,6 @@ Hooks.once('init', () => {
       });
     }
 
-    _rememberOpenSkillTalentSections(html) {
-      this._openSkillTalentSections = html.find('.skill-talent-collapsible').toArray()
-        .filter((element) => element.open)
-        .map((element) => element.dataset.skill)
-        .filter(Boolean);
-    }
-
-    _restoreOpenSkillTalentSections(html) {
-      const openSkills = this._openSkillTalentSections ?? [];
-      html.find('.skill-talent-collapsible').each((_, element) => {
-        element.open = openSkills.includes(element.dataset.skill);
-      });
-    }
-
     activateListeners(html) {
       super.activateListeners(html);
       const ownerColor = getActorOwnerColor(this.actor);
@@ -2920,7 +3059,6 @@ Hooks.once('init', () => {
       sheetElement?.style.setProperty('--d100-sheet-border-color', ownerColor);
       sheetElement?.closest?.('.app')?.style.setProperty('--d100-sheet-border-color', ownerColor);
       this._restoreFeatureOpenState(html);
-      this._restoreOpenSkillTalentSections(html);
       const syncInactiveTabInputs = () => {
         html.find('.tab[data-group="primary"]').each((_, tab) => {
           const isActive = tab.classList.contains('active');
@@ -3026,7 +3164,12 @@ Hooks.once('init', () => {
           : '';
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `<p><strong>${this.actor.name}</strong> uses <strong>${item.name}</strong>.</p>${rollSummary}${description ? `<p>${renderChatText(description, this.actor)}</p>` : ''}${areaButton}${itemEffectsChatContent(item, this.actor)}`,
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: 'Consumable',
+            bodyHtml: `${rollSummary}${description ? `<p>${renderChatText(description, this.actor)}</p>` : ''}${areaButton}${itemEffectsChatContent(item, this.actor)}`
+          }),
           rolls: messageRolls
         });
 
@@ -3066,7 +3209,12 @@ Hooks.once('init', () => {
           : '';
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `<p><strong>${this.actor.name}</strong> uses <strong>${item.name}</strong>.</p>${resourceCost > 0 ? `<p><strong>${resourceType} spent:</strong> ${resourceCost} (${currentResource} → ${nextResource})</p>` : ''}${rollSummary}${description ? `<p>${renderChatText(description, this.actor)}</p>` : ''}${areaButton}${itemEffectsChatContent(item, this.actor)}`,
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: 'Magic Item',
+            bodyHtml: `${resourceCost > 0 ? `<p><strong>${resourceType} spent:</strong> ${resourceCost} (${currentResource} → ${nextResource})</p>` : ''}${rollSummary}${description ? `<p>${renderChatText(description, this.actor)}</p>` : ''}${areaButton}${itemEffectsChatContent(item, this.actor)}`
+          }),
           rolls: messageRolls
         });
         this.render();
@@ -3083,12 +3231,12 @@ Hooks.once('init', () => {
         const copper = Math.max(0, Number(item.system?.copper) || 0);
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `
-            <h3>${item.name}</h3>
-            <p>Tier: ${tier}</p>
-            <p>Cost: ${gold} Gold, ${silver} Silver, ${copper} Copper</p>
-            ${description ? `<p>${renderChatText(description, this.actor)}</p>` : '<p>No description supplied.</p>'}
-          `
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: `Tier ${tier} · ${gold}g ${silver}s ${copper}c`,
+            bodyHtml: description ? renderChatText(description, this.actor) : 'No description supplied.'
+          })
         });
       });
       html.find('.item-list-equip').click(async (event) => {
@@ -3165,22 +3313,43 @@ Hooks.once('init', () => {
         await combatant.update({ 'flags.d100-system.reactionUsed': !current });
         this.render();
       });
-      html.find('.skill-talent-send').click(async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
+      html.find('.skill-talent-row').click((event) => {
         const itemId = event.currentTarget.dataset.talentId;
         const item = this.actor.items.get(itemId);
         if (!item) return;
         const description = String(item.system?.description ?? '').trim();
-        await ChatMessage.create({
-          speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+        const tier = Number(item.system?.tier) || 1;
+        const usesPerDay = Number(item.system?.usesPerDay) || 0;
+        const actionTypeLabel = getActionTypeLabel(item.system?.actionType);
+        const actorRef = this.actor;
+
+        new Dialog({
+          title: item.name || 'Talent',
           content: `
-            <p><strong>${this.actor.name}</strong> uses talent <strong>${item.name}</strong>.</p>
-            ${description ? `<p>${renderChatText(description, this.actor)}</p>` : ''}
-            ${configuredAreaButton(item.system)}
-            ${itemEffectsChatContent(item, this.actor)}
-          `
-        });
+            <div class="d100-system">
+              <p class="skill-talent-dialog-meta">Tier ${tier} · ${actionTypeLabel}${usesPerDay ? ` · ${usesPerDay}/day` : ''}</p>
+              ${description ? `<p class="skill-talent-dialog-description">${renderChatText(description, actorRef)}</p>` : '<p>No description supplied.</p>'}
+            </div>
+          `,
+          buttons: {
+            send: {
+              label: 'Send to Chat',
+              callback: async () => {
+                await ChatMessage.create({
+                  speaker: ChatMessage.getSpeaker({ actor: actorRef }),
+                  content: buildDescriptionChatCard({
+                    actor: actorRef,
+                    title: item.name,
+                    subtitle: `Talent · Tier ${tier} · ${actionTypeLabel}${usesPerDay ? ` · ${usesPerDay}/day` : ''}`,
+                    bodyHtml: `${description ? renderChatText(description, actorRef) : ''}${configuredAreaButton(item.system)}${itemEffectsChatContent(item, actorRef)}`
+                  })
+                });
+              }
+            },
+            close: { label: 'Close' }
+          },
+          default: 'close'
+        }, { classes: ['dialog', 'd100-system'] }).render(true);
       });
       html.find('.skill-talent-row').on('contextmenu', async (event) => {
         event.preventDefault();
@@ -3189,7 +3358,6 @@ Hooks.once('init', () => {
         const item = this.actor.items.get(itemId);
         if (!item || item.type !== 'talent') return;
 
-        this._rememberOpenSkillTalentSections(html);
         await this.actor.deleteEmbeddedDocuments('Item', [item.id]);
       html.on('click', '[data-d100-area-template]', async (event) => {
         event.preventDefault();
@@ -3389,7 +3557,12 @@ Hooks.once('init', () => {
         const description = String(item.system?.description ?? '').trim();
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `<p><strong>${item.name}</strong></p>${description ? `<p>${renderChatText(description, this.actor)}</p>` : '<p>No description supplied.</p>'}${configuredAreaButton(item.system)}${itemEffectsChatContent(item, this.actor)}`
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: 'Feature',
+            bodyHtml: `${description ? renderChatText(description, this.actor) : 'No description supplied.'}${configuredAreaButton(item.system)}${itemEffectsChatContent(item, this.actor)}`
+          })
         });
       });
       html.find('.npc-feature-open').click((event) => {
@@ -3415,7 +3588,12 @@ Hooks.once('init', () => {
         if (!choice) return;
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `<p><strong>${choice.name}</strong></p>${choice.description ? `<p>${renderChatText(choice.description, this.actor)}</p>` : '<p>No description supplied.</p>'}`
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: choice.name,
+            subtitle: 'Category Trait',
+            bodyHtml: choice.description ? renderChatText(choice.description, this.actor) : 'No description supplied.'
+          })
         });
       });
       html.find('.category-trait-choice-row').on('contextmenu', (event) => {
@@ -3505,7 +3683,12 @@ Hooks.once('init', () => {
         if (!option) return;
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `<p><strong>${item.name}</strong> — ${stageData.name || `Stage ${stageKey}`}: <strong>${option.name || `Option ${optionKey}`}</strong></p><p>${renderChatText(option.description, this.actor)}</p>`
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: `${stageData.name || `Stage ${stageKey}`} · ${option.name || `Option ${optionKey}`}`,
+            bodyHtml: renderChatText(option.description, this.actor)
+          })
         });
       });
       html.find('.npc-feature-item-row').on('contextmenu', async (event) => {
@@ -3624,7 +3807,7 @@ Hooks.once('init', () => {
             ? { healer: this.actor.name, source: item.name }
             : null;
           damageRollSummary = `
-            <p><strong>${spellEffectLabel} Roll:</strong> ${damageRoll.total} (${damageHealingExpression})</p>
+            <p class="d100-chat-card-text"><strong>${spellEffectLabel} Roll:</strong> ${damageRoll.total} (${damageHealingExpression})</p>
             ${buildApplyEffectButton(damageRoll.total, spellDamageType, trackInfo)}
           `;
         }
@@ -3632,19 +3815,30 @@ Hooks.once('init', () => {
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
           content: `
-            <p><strong>${this.actor.name}</strong> casts <strong>${item.name}</strong> using <strong>${skillLabel}</strong>.</p>
-            <p>Attribute: ${attributeLabels[attributeKey] ?? attributeKey}</p>
-            <p>TN: ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)</p>
-            <p>Roll: ${roll.total}</p>
-            <p><strong>${degreeInfo.label}</strong></p>
-            <p><strong>${resourceType} spent:</strong> ${totalCost} (${resourceCost} base + ${empowermentUses * empowermentCost} empowerment; ${currentResource} → ${nextResource})</p>
-            ${empowered && empowermentDice ? `<p><strong>Empowerment Dice Added:</strong> ${empowermentDice} × ${empowermentUses}</p>` : ''}
-            ${damageRollSummary}
-            ${skillTalentsChatContent(this.actor, skillKey)}
-            ${description ? `<p><strong>Spell:</strong> ${renderChatText(description, this.actor)}</p>` : ''}
-            ${empowered && empowermentDescription ? `<p><strong>Empowerment:</strong> ${empowermentDescription}</p>` : ''}
-            ${configuredAreaButton(item.system)}
-            ${itemEffectsChatContent(item, this.actor)}
+            <div class="d100-chat-card">
+              <div class="d100-chat-card-header">
+                <img src="${this.actor.img || 'icons/svg/mystery-man.svg'}" alt="${this.actor.name}" />
+                <div class="d100-chat-card-header-text">
+                  <span class="d100-chat-card-title">${item.name}</span>
+                  <span class="d100-chat-card-subtitle">${this.actor.name} · ${skillLabel}</span>
+                </div>
+              </div>
+              <div class="d100-chat-card-body">
+                <p class="d100-chat-card-breakdown">${attributeLabels[attributeKey] ?? attributeKey} · TN ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)</p>
+                <div class="d100-chat-card-result outcome-${degreeInfo.type}">
+                  <span class="d100-chat-card-roll-total">${roll.total}</span>
+                  <span class="d100-chat-card-outcome-label">${degreeInfo.label}</span>
+                </div>
+                <p class="d100-chat-card-breakdown"><strong>${resourceType} spent:</strong> ${totalCost} (${resourceCost} base + ${empowermentUses * empowermentCost} empowerment; ${currentResource} → ${nextResource})</p>
+                ${empowered && empowermentDice ? `<p class="d100-chat-card-breakdown"><strong>Empowerment Dice Added:</strong> ${empowermentDice} × ${empowermentUses}</p>` : ''}
+                ${damageRollSummary}
+                ${skillTalentsChatContent(this.actor, skillKey)}
+                ${description ? `<details><summary>Description</summary><p>${renderChatText(description, this.actor)}</p></details>` : ''}
+                ${empowered && empowermentDescription ? `<details><summary>Empowerment</summary><p>${renderChatText(empowermentDescription, this.actor)}</p></details>` : ''}
+                ${configuredAreaButton(item.system)}
+                ${itemEffectsChatContent(item, this.actor)}
+              </div>
+            </div>
           `,
           rolls: messageRolls
         });
@@ -3751,10 +3945,12 @@ Hooks.once('init', () => {
         const description = String(item.system?.description ?? '').trim();
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `
-            <p><strong>${this.actor.name}</strong> examines <strong>${item.name}</strong>.</p>
-            ${description ? `<p>${renderChatText(description, this.actor)}</p>` : '<p>No description supplied.</p>'}
-          `
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: 'Weapon',
+            bodyHtml: description ? renderChatText(description, this.actor) : 'No description supplied.'
+          })
         });
       });
       html.find('.gear-description').click(async (event) => {
@@ -3766,10 +3962,12 @@ Hooks.once('init', () => {
         const description = String(item.system?.description ?? '').trim();
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `
-            <p><strong>${this.actor.name}</strong> examines <strong>${item.name}</strong>.</p>
-            ${description ? `<p>${renderChatText(description, this.actor)}</p>` : '<p>No description supplied.</p>'}
-          `
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: 'Gear',
+            bodyHtml: description ? renderChatText(description, this.actor) : 'No description supplied.'
+          })
         });
       });
       html.find('.shield-block').click(async (event) => {
@@ -3819,14 +4017,14 @@ Hooks.once('init', () => {
         }
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `
-            <p><strong>${this.actor.name}</strong> attempts to block with <strong>${shield.name}</strong>.</p>
-            <p>TN: ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)</p>
-            <p>Roll: ${roll.total}</p>
-            <p><strong>${degreeInfo.label}</strong></p>
-            ${succeeded ? `<p>Defense increased by ${Number(shield.system?.defense) || 0} until the shield is lowered.</p>` : ''}
-            ${skillTalentsChatContent(this.actor, 'shields')}
-          `,
+          content: buildCheckChatCard({
+            actor: this.actor,
+            title: `Block: ${shield.name}`,
+            breakdown: `TN ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)${succeeded ? `<br>Defense increased by ${Number(shield.system?.defense) || 0} until the shield is lowered.` : ''}`,
+            roll,
+            degreeInfo,
+            extraBodyHtml: skillTalentsChatContent(this.actor, 'shields')
+          }),
           rolls: [roll]
         });
         this.render();
@@ -3915,7 +4113,7 @@ Hooks.once('init', () => {
           .filter(([, value]) => (Number(value) || 0) !== 0)
           .map(([type, value]) => ({ type: getResistanceTypeLabel(type), rawType: type, value: Number(value) || 0 }));
         const bonusDamageSummary = bonusDamage
-          .map((bonus) => `<p><strong>${bonus.type} Damage:</strong> ${bonus.value}</p>${buildApplyEffectButton(bonus.value, bonus.rawType)}`)
+          .map((bonus) => `<p class="d100-chat-card-text"><strong>${bonus.type} Damage:</strong> ${bonus.value}</p>${buildApplyEffectButton(bonus.value, bonus.rawType)}`)
           .join('');
         const description = String(item.system?.description ?? '').trim();
 
@@ -3923,24 +4121,28 @@ Hooks.once('init', () => {
         const hiddenEntry = getActorActiveConditions(this.actor).find((entry) => entry.def.revealedByAttack);
         if (hiddenEntry) {
           await removeConditionStacks(this.actor, hiddenEntry.key, null);
-          revealNote = `<p><em>${this.actor.name} is revealed by making an Attack Check.</em></p>`;
+          revealNote = `<p class="d100-chat-card-text"><em>${this.actor.name} is revealed by making an Attack Check.</em></p>`;
         }
 
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `
-            <p><strong>${this.actor.name}</strong> uses <strong>${item.name}</strong> with <strong>${skillLabel}</strong>.</p>
-            <p>TN: ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)</p>
-            <p>Roll: ${roll.total}</p>
-            <p><strong>${degreeInfo.label}</strong></p>
-            <p><strong>${damageType} Damage:</strong> ${damageRoll.total} (${damageFormula})</p>
-            ${buildApplyEffectButton(damageRoll.total, rawDamageType)}
-            ${bonusDamageSummary}
-            ${skillTalentsChatContent(this.actor, skillKey)}
-            ${configuredAreaButton(item.system)}
-            ${description ? `<details><summary>Description</summary><p>${renderChatText(description, this.actor)}</p></details>` : ''}
-            ${revealNote}
-          `,
+          content: buildCheckChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: skillLabel,
+            breakdown: `TN ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)`,
+            roll,
+            degreeInfo,
+            extraBodyHtml: `
+              <p class="d100-chat-card-text"><strong>${damageType} Damage:</strong> ${damageRoll.total} (${damageFormula})</p>
+              ${buildApplyEffectButton(damageRoll.total, rawDamageType)}
+              ${bonusDamageSummary}
+              ${skillTalentsChatContent(this.actor, skillKey)}
+              ${configuredAreaButton(item.system)}
+              ${description ? `<details><summary>Description</summary><p>${renderChatText(description, this.actor)}</p></details>` : ''}
+              ${revealNote}
+            `
+          }),
           rolls: [roll, damageRoll]
         });
       });
@@ -3957,12 +4159,12 @@ Hooks.once('init', () => {
 
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `
-            <p><strong>${this.actor.name}</strong> deals damage with <strong>${item.name}</strong>.</p>
-            <p>Damage Roll: ${roll.total} (${diceExpression})</p>
-            ${buildApplyEffectButton(roll.total, rawDamageType)}
-            ${configuredAreaButton(item.system)}
-          `,
+          content: buildDescriptionChatCard({
+            actor: this.actor,
+            title: item.name,
+            subtitle: 'Weapon Damage',
+            bodyHtml: `<p>Damage Roll: ${roll.total} (${diceExpression})</p>${buildApplyEffectButton(roll.total, rawDamageType)}${configuredAreaButton(item.system)}`
+          }),
           rolls: [roll]
         });
       });
@@ -4188,16 +4390,13 @@ Hooks.once('init', () => {
           const label = `${actorName} has ${verb} ${count} Scar${count === 1 ? '' : 's'} and now has ${safeValue} out of ${maxValue}`;
 
           if (typeof ChatMessage !== 'undefined') {
-            const chatHtml = `
-              <div class="d100-scar-change-chat">
-                <div class="d100-scar-change-header">Scar Update</div>
-                <div class="d100-scar-change-body">${label}</div>
-              </div>
-            `;
-
             ChatMessage.create({
               speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-              content: chatHtml
+              content: buildStatusChatCard({
+                icon: 'icons/svg/blood.svg',
+                title: 'Scar Update',
+                bodyHtml: `<p>${label}.</p>`
+              })
             });
           }
         }
@@ -4237,7 +4436,6 @@ Hooks.once('init', () => {
     }
 
     async _onDrop(event) {
-      this._rememberOpenSkillTalentSections(this.element);
       if (this.actor.type === 'npc') {
         const data = getDragItemData(event);
         const dragType = data?.type ?? data?.documentType ?? data?.document?.type ?? data?.data?.type;
@@ -4504,12 +4702,12 @@ Hooks.once('init', () => {
       const featureTitle = title ? `${title}` : `Level ${level} Feature`;
       await ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        content: `
-          <p><strong>${this.actor.name}</strong> uses <strong>${profession?.name ?? 'Profession'}</strong> — ${featureTitle}</p>
-          <p>${renderChatText(text, this.actor)}</p>
-            ${configuredAreaButton(normalized)}
-            ${itemEffectsChatContent(profession, this.actor)}
-        `
+        content: buildDescriptionChatCard({
+          actor: this.actor,
+          title: featureTitle,
+          subtitle: profession?.name ?? 'Profession',
+          bodyHtml: `${renderChatText(text, this.actor)}${configuredAreaButton(normalized)}${itemEffectsChatContent(profession, this.actor)}`
+        })
       });
     }
 
@@ -4602,6 +4800,7 @@ Hooks.once('init', () => {
 
       if (actorRace && actorRace.uuid !== item.uuid) {
         await replaceItemEffectsFromSource(actorRace, item);
+        await this.actor.update({ 'flags.d100-system.suppressedAutoEffects': [] });
         await syncAutomaticItemEffects(actorRace);
       }
 
@@ -4763,11 +4962,12 @@ Hooks.once('init', () => {
       const featureTitle = title ? `${title}` : `Level ${level} Feature`;
       await ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        content: `
-          <p><strong>${this.actor.name}</strong> uses <strong>${race?.name ?? 'Race'}</strong> — ${featureTitle}</p>
-          <p>${renderChatText(text, this.actor)}</p>
-            ${configuredAreaButton(normalized)}
-        `
+        content: buildDescriptionChatCard({
+          actor: this.actor,
+          title: featureTitle,
+          subtitle: race?.name ?? 'Race',
+          bodyHtml: `${renderChatText(text, this.actor)}${configuredAreaButton(normalized)}`
+        })
       });
     }
 
@@ -4804,7 +5004,8 @@ Hooks.once('init', () => {
       const resourceType = String(resource.type ?? 'resource').replace(/^./, (character) => character.toUpperCase());
       const healingEntries = Array.isArray(this.actor.system.healing) ? this.actor.system.healing : [];
       const updates = {};
-      let chatContent = '';
+      let bodyHtml = '';
+      let subtitle = '';
       let messageRolls = [];
 
       if (restType === 'short') {
@@ -4816,8 +5017,8 @@ Hooks.once('init', () => {
         const nextHealth = Math.min(healthMax, currentHealth + roll.total);
         updates['system.health.value'] = nextHealth;
         updates['system.healing'] = healingEntries.filter((entry) => String(entry?.reset ?? '').trim() !== 'short-rest');
-        chatContent = `
-          <p><strong>${this.actor.name}</strong> takes a <strong>Short Rest</strong>.</p>
+        subtitle = 'Short Rest';
+        bodyHtml = `
           <p><strong>Healing:</strong> ${roll.total} (${formula})</p>
           <p>Health: ${currentHealth} → ${nextHealth} / ${healthMax}</p>
         `;
@@ -4825,8 +5026,8 @@ Hooks.once('init', () => {
         updates['system.health.value'] = healthMax;
         updates['system.resource.value'] = 0;
         updates['system.healing'] = healingEntries.filter((entry) => !['short-rest', 'long-rest'].includes(String(entry?.reset ?? '').trim()));
-        chatContent = `
-          <p><strong>${this.actor.name}</strong> takes a <strong>Long Rest</strong>.</p>
+        subtitle = 'Long Rest';
+        bodyHtml = `
           <p>Health: ${currentHealth} → ${healthMax} / ${healthMax}</p>
           <p>${resourceType}: ${currentResource} → 0</p>
         `;
@@ -4835,7 +5036,11 @@ Hooks.once('init', () => {
       await this.actor.update(updates);
       await ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        content: chatContent,
+        content: buildDescriptionChatCard({
+          actor: this.actor,
+          title: subtitle,
+          bodyHtml
+        }),
         rolls: messageRolls
       });
       this.render();
@@ -4853,9 +5058,12 @@ Hooks.once('init', () => {
         if (autoFailConditions.length) {
           await ChatMessage.create({
             speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-            content: `
-              <p><strong>${this.actor.name}</strong> automatically fails the ${attributeLabel} save (${autoFailConditions.map((entry) => entry.def.label).join(', ')}).</p>
-            `
+            content: buildDescriptionChatCard({
+              actor: this.actor,
+              title: `${attributeLabel} Save`,
+              subtitle: 'Automatic Failure',
+              bodyHtml: `<p>Automatically fails (${autoFailConditions.map((entry) => entry.def.label).join(', ')}).</p>`
+            })
           });
           return;
         }
@@ -4905,12 +5113,13 @@ Hooks.once('init', () => {
 
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `
-            <p><strong>${this.actor.name}</strong> makes a ${attributeLabel} save.</p>
-            <p>TN: ${targetNumber} (${attributeValue}×10 + ${songs} Songs - ${swords} Swords)</p>
-            <p>Roll: ${roll.total}</p>
-            <p><strong>${degreeInfo.label}</strong></p>
-          `,
+          content: buildCheckChatCard({
+            actor: this.actor,
+            title: `${attributeLabel} Save`,
+            breakdown: `TN ${targetNumber} (${attributeValue}×10 + ${songs} Songs - ${swords} Swords)`,
+            roll,
+            degreeInfo
+          }),
           rolls: [roll]
         });
       } catch (error) {
@@ -4971,12 +5180,13 @@ Hooks.once('init', () => {
 
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-          content: `
-            <p><strong>${this.actor.name}</strong> makes an <strong>${attributeLabel}</strong> check.</p>
-            <p>TN: ${targetNumber} (${attributeValue}×10 + ${attributeValue} + ${songs} Songs - ${swords} Swords)</p>
-            <p>Roll: ${roll.total}</p>
-            <p><strong>${degreeInfo.label}</strong></p>
-          `,
+          content: buildCheckChatCard({
+            actor: this.actor,
+            title: `${attributeLabel} Check`,
+            breakdown: `TN ${targetNumber} (${attributeValue}×10 + ${attributeValue} + ${songs} Songs - ${swords} Swords)`,
+            roll,
+            degreeInfo
+          }),
           rolls: [roll]
         });
       } catch (error) {
@@ -5050,12 +5260,15 @@ Hooks.once('init', () => {
 
       await ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        content: `
-          <p><strong>${this.actor.name}</strong> rolls <strong>${skillLabel}</strong> using ${attributeLabels[attributeKey] ?? attributeKey}.</p>
-          <p>TN: ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)</p>
-          <p>Roll: ${roll.total}</p>
-          <p><strong>${degreeInfo.label}</strong></p>
-        `,
+        content: buildCheckChatCard({
+          actor: this.actor,
+          title: `${skillLabel} Check`,
+          subtitle: attributeLabels[attributeKey] ?? attributeKey,
+          breakdown: `TN ${targetNumber} (${attributeValue}×10 + ${skillValue} + ${songs} Songs - ${swords} Swords)`,
+          roll,
+          degreeInfo,
+          extraBodyHtml: skillTalentsChatContent(this.actor, skillKey)
+        }),
         rolls: [roll]
       });
     }
@@ -5847,7 +6060,12 @@ Hooks.once('init', () => {
           }
           await ChatMessage.create({
             speaker: ChatMessage.getSpeaker({ actor: token.actor }),
-            content: `<p><strong>${token.actor.name}</strong> ${verb} <strong>${result.finalAmount}</strong> ${result.isHealing ? 'healing' : `${getResistanceTypeLabel(damageType)} damage`}${reductionNote}.</p><p>Health: ${result.newValue} / ${result.maxValue}</p>${trackerNote}`
+            content: buildDescriptionChatCard({
+              actor: token.actor,
+              title: result.isHealing ? 'Healing Applied' : 'Damage Applied',
+              subtitle: result.isHealing ? undefined : getResistanceTypeLabel(damageType),
+              bodyHtml: `<p>${verb} <strong>${result.finalAmount}</strong> ${result.isHealing ? 'healing' : `${getResistanceTypeLabel(damageType)} damage`}${reductionNote}.</p><p>Health: ${result.newValue} / ${result.maxValue}</p>${trackerNote}`
+            })
           });
         }
       });
@@ -5872,7 +6090,11 @@ Hooks.once('init', () => {
         const isHealing = damageType === 'healing';
         const label = isHealing ? 'Healing' : `${getResistanceTypeLabel(damageType)} Damage`;
         await ChatMessage.create({
-          content: `<p><strong>${label}:</strong> ${roll.total} (${roll.formula})</p>${buildApplyEffectButton(roll.total, damageType)}`,
+          content: buildStatusChatCard({
+            icon: isHealing ? 'icons/magic/life/heart-cross-strong-flame-green.webp' : 'icons/skills/melee/strike-slashes-red.webp',
+            title: label,
+            bodyHtml: `<p>${roll.total} (${roll.formula})</p>${buildApplyEffectButton(roll.total, damageType)}`
+          }),
           rolls: [roll]
         });
       });
@@ -5897,7 +6119,11 @@ Hooks.once('init', () => {
         }
         const stackLabel = def.stackable && stacks > 1 ? ` (x${stacks})` : '';
         await ChatMessage.create({
-          content: `<p>Applied <strong>${def.label}${stackLabel}</strong> to ${targets.map((actor) => actor.name).join(', ')}.</p>`
+          content: buildStatusChatCard({
+            icon: 'icons/magic/lightning/bolt-blue.webp',
+            title: `${def.label}${stackLabel}`,
+            bodyHtml: `<p>Applied to ${targets.map((actor) => actor.name).join(', ')}.</p>`
+          })
         });
       });
     });
@@ -5938,7 +6164,12 @@ Hooks.once('init', () => {
         const verb = direction === 'loss' ? 'loses' : 'gains';
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor }),
-          content: `<p><strong>${actor.name}</strong> ${verb} <strong>${amount}</strong> ${resourceLabel} (${roll.total} rolled, ${formula}).</p><p>${resourceLabel}: ${nextValue} / ${maxResource}</p>`,
+          content: buildDescriptionChatCard({
+            actor,
+            title: `${resourceLabel} ${direction === 'loss' ? 'Loss' : 'Gain'}`,
+            subtitle: `${roll.total} rolled (${formula})`,
+            bodyHtml: `<p>${verb} <strong>${amount}</strong> ${resourceLabel}.</p><p>${resourceLabel}: ${nextValue} / ${maxResource}</p>`
+          }),
           rolls: [roll]
         });
       });
@@ -5979,6 +6210,7 @@ Hooks.once('init', () => {
   Hooks.on('updateItem', async (item) => {
     if (isAutomaticEffectSource(item)) await syncAutomaticItemEffects(item);
     else if (item.type === 'armor') await clearAutomaticItemEffects(item);
+    if (item.type === 'race') await dedupeItemEffects(item);
   });
   Hooks.on('deleteItem', async (item) => {
     await clearAutomaticItemEffects(item);
@@ -5986,14 +6218,27 @@ Hooks.once('init', () => {
   Hooks.on('createActiveEffect', async (effect, options) => {
     if (options?.d100SkipAutomaticSync) return;
     if (isAutomaticEffectSource(effect.parent)) await syncAutomaticItemEffects(effect.parent);
+    if (effect.parent?.type === 'race') await dedupeItemEffects(effect.parent);
   });
   Hooks.on('updateActiveEffect', async (effect, changes, options) => {
     if (options?.d100SkipAutomaticSync) return;
     if (isAutomaticEffectSource(effect.parent)) await syncAutomaticItemEffects(effect.parent);
+    if (effect.parent?.type === 'race') await dedupeItemEffects(effect.parent);
   });
   Hooks.on('deleteActiveEffect', async (effect, options) => {
     if (options?.d100SkipAutomaticSync) return;
     if (isAutomaticEffectSource(effect.parent)) await syncAutomaticItemEffects(effect.parent);
+    if (effect.parent?.type === 'race') await dedupeItemEffects(effect.parent);
+
+    const sourceEffectId = effect.flags?.['d100-system']?.sourceEffectId;
+    if (effect.flags?.['d100-system']?.automaticSource && sourceEffectId && effect.parent?.documentName === 'Actor') {
+      const actor = effect.parent;
+      const suppressed = new Set(actor.flags?.['d100-system']?.suppressedAutoEffects ?? []);
+      if (!suppressed.has(sourceEffectId)) {
+        suppressed.add(sourceEffectId);
+        await actor.update({ 'flags.d100-system.suppressedAutoEffects': [...suppressed] });
+      }
+    }
   });
 
   Hooks.on('updateActor', async (actor, changes) => {
@@ -6005,14 +6250,18 @@ Hooks.once('init', () => {
 
     const newHealthValue = changes.system?.health?.value;
     if (typeof newHealthValue === 'undefined') return;
-    const dyingDef = CONDITION_DEFS.dying;
+    if (actor.type !== 'character') return;
     const alreadyDying = getActorActiveConditions(actor).some((entry) => entry.key === 'dying');
     if (Number(newHealthValue) <= 0) {
       if (!alreadyDying) {
         await applyConditionToActor(actor, 'dying', 1);
         await ChatMessage.create({
           speaker: ChatMessage.getSpeaker({ actor }),
-          content: `<p><strong>${actor.name}</strong> drops to 0 Health and gains the <strong>Dying</strong> condition. ${dyingDef.description}</p>`
+          content: buildStatusChatCard({
+            icon: 'icons/svg/skull.svg',
+            title: 'Dying',
+            bodyHtml: `<p>Drops to 0 Health and gains the <strong>Dying</strong> condition.</p>`
+          })
         });
       }
     } else if (alreadyDying) {
@@ -6020,17 +6269,48 @@ Hooks.once('init', () => {
     }
   });
 
+  async function dedupeItemEffects(item) {
+    if (!item) return;
+    const seenKeys = new Set();
+    const extraIds = [];
+    for (const effect of [...(item.effects ?? [])]) {
+      const key = String(effect.name ?? '').trim().toLowerCase();
+      if (!key) continue;
+      if (seenKeys.has(key)) {
+        extraIds.push(effect.id);
+      } else {
+        seenKeys.add(key);
+      }
+    }
+    if (extraIds.length) await item.deleteEmbeddedDocuments('ActiveEffect', extraIds, { d100SkipAutomaticSync: true });
+  }
+
   Hooks.once('ready', async () => {
     if (!game.user.isGM) return;
     for (const actor of game.actors) {
       for (const item of actor.items.filter((entry) => entry.type === 'race')) {
-        if (!getItemEffects(item).length) {
+        if (!getItemEffects(item).length && !item.flags?.['d100-system']?.effectRepairAttempted) {
           const sourceRace = game.items.find((entry) => entry.type === 'race' && entry.name === item.name && getItemEffects(entry).length);
           if (sourceRace) await replaceItemEffectsFromSource(item, sourceRace);
+          await item.update({ 'flags.d100-system.effectRepairAttempted': true }, { d100SkipAutomaticSync: true });
         }
         await syncAutomaticItemEffects(item);
+        await dedupeItemEffects(item);
       }
       await syncVitalModifierIndicators(actor);
+
+      const conditionGroups = new Map();
+      for (const effect of getActorConditionEffects(actor)) {
+        const key = effect.flags?.['d100-system']?.condition;
+        if (!key) continue;
+        if (!conditionGroups.has(key)) conditionGroups.set(key, []);
+        conditionGroups.get(key).push(effect);
+      }
+      for (const [, group] of conditionGroups) {
+        if (group.length > 1) {
+          await actor.deleteEmbeddedDocuments('ActiveEffect', group.slice(1).map((effect) => effect.id));
+        }
+      }
     }
   });
 

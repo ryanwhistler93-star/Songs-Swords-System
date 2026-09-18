@@ -102,16 +102,20 @@
           {{/if}}
           {{#each attributeEntries as |attribute|}}
             <div class="attribute-row">
-              <label>{{attribute.label}}</label>
-              <input class="attribute-value-input" name="system.attributes.{{attribute.key}}" type="number" value="{{attribute.value}}" min="1" max="{{attribute.max}}" {{#unless ../isEditMode}}disabled{{/unless}} />
-              <button type="button" class="save-roll" data-attribute="{{attribute.key}}" data-target="{{attribute.target}}">
-                Save: {{attribute.target}}
-              </button>
-              {{#if @root.isNpc}}
-                <button type="button" class="attribute-check-roll" data-attribute="{{attribute.key}}" data-target="{{attribute.checkTarget}}">
-                  Check: {{attribute.checkTarget}}
+              <div class="attribute-row-label">
+                <label>{{attribute.label}}</label>
+              </div>
+              <div class="attribute-row-controls">
+                <input class="attribute-value-input" name="system.attributes.{{attribute.key}}" type="number" value="{{attribute.value}}" min="1" max="{{attribute.max}}" {{#unless ../isEditMode}}disabled{{/unless}} />
+                <button type="button" class="save-roll" data-attribute="{{attribute.key}}" data-target="{{attribute.target}}">
+                  Save: {{attribute.target}}
                 </button>
-              {{/if}}
+                {{#if @root.isNpc}}
+                  <button type="button" class="attribute-check-roll" data-attribute="{{attribute.key}}" data-target="{{attribute.checkTarget}}">
+                    Check: {{attribute.checkTarget}}
+                  </button>
+                {{/if}}
+              </div>
             </div>
           {{/each}}
         </div>
@@ -462,6 +466,14 @@
     </div>
 
     <div class="tab" data-group="primary" data-tab="skills">
+      {{#if (eq actor.type "character")}}
+        <div class="stat-block skill-points-block">
+          <div class="skill-points-header">
+            <label>Skill Points</label>
+            <span class="{{#if skillPointsOverBudget}}skill-points-over{{/if}}">{{skillPointsUsed}} / {{skillPointsMax}}</span>
+          </div>
+        </div>
+      {{/if}}
       {{#if favoriteSkillEntries.length}}
         <details class="stat-block skill-group-block favorite-skills-block" open>
           <summary><h3>Favorite Skills</h3></summary>
@@ -480,10 +492,8 @@
                   {{#each skill.talentSlots as |slot|}}
                     <div class="skill-talent-slot" data-skill="{{../key}}" data-milestone="{{slot.milestone}}" data-max-tier="{{slot.maxTier}}">
                       {{#if slot.talent}}
-                        <div class="skill-talent-row" data-talent-id="{{slot.talent.id}}" title="Right-click to remove">
+                        <div class="skill-talent-row" data-talent-id="{{slot.talent.id}}" title="Click for details · Right-click to remove">
                           <span class="skill-talent-name">{{slot.talent.name}}</span>
-                          <span class="skill-talent-meta">T{{slot.talent.tier}} · {{slot.talent.actionTypeLabel}}</span>
-                          <button type="button" class="skill-talent-send" data-talent-id="{{slot.talent.id}}" title="Send to chat" aria-label="Send {{slot.talent.name}} to chat"><i class="fas fa-comment"></i></button>
                         </div>
                       {{else}}
                         <span class="skill-talent-empty">{{slot.label}}</span>
@@ -522,10 +532,8 @@
                       {{#each skill.talentSlots as |slot|}}
                         <div class="skill-talent-slot" data-skill="{{../key}}" data-milestone="{{slot.milestone}}" data-max-tier="{{slot.maxTier}}">
                           {{#if slot.talent}}
-                            <div class="skill-talent-row" data-talent-id="{{slot.talent.id}}" title="Right-click to remove">
+                            <div class="skill-talent-row" data-talent-id="{{slot.talent.id}}" title="Click for details · Right-click to remove">
                               <span class="skill-talent-name">{{slot.talent.name}}</span>
-                              <span class="skill-talent-meta">T{{slot.talent.tier}} · {{slot.talent.actionTypeLabel}}</span>
-                              <button type="button" class="skill-talent-send" data-talent-id="{{slot.talent.id}}" title="Send to chat" aria-label="Send {{slot.talent.name}} to chat"><i class="fas fa-comment"></i></button>
                             </div>
                           {{else}}
                             <span class="skill-talent-empty">{{slot.label}}</span>
@@ -856,20 +864,12 @@
                         <span>Spell</span>
                         <span>Action</span>
                         <span>Range</span>
-                        <span>Magic Skill Check</span>
-                        <span>Damage / Healing</span>
-                        <span>Resource Cost</span>
-                        <span>Empowerment Cost</span>
                       </div>
                       {{#each tab.entries as |spell|}}
-                        <div class="spell-table-row" data-item-id="{{spell.id}}" title="Open spell item{{#if @root.isEditMode}}; right-click to remove{{/if}}">
-                          <span>{{spell.name}}</span>
+                        <div class="spell-table-row" data-item-id="{{spell.id}}" title="Click name to cast; click elsewhere to open spell item{{#if @root.isEditMode}}; right-click to remove{{/if}}">
+                          <button type="button" class="spell-magic-roll" data-item-id="{{spell.id}}" data-skill="{{spell.magicSkillCheck}}" title="{{spell.damageHealingLabel}}&#10;Resource: {{spell.resourceCost}}&#10;Empowerment: {{spell.empowermentCost}}">{{spell.name}}</button>
                           <span>{{spell.actionTypeLabel}}</span>
                           <span>{{spell.range}}</span>
-                          <button type="button" class="spell-magic-roll" data-item-id="{{spell.id}}" data-skill="{{spell.magicSkillCheck}}">Cast</button>
-                          <span>{{spell.damageHealingLabel}}</span>
-                          <span>{{spell.resourceCost}}</span>
-                          <span>{{spell.empowermentCost}}</span>
                         </div>
                       {{/each}}
                     </div>
